@@ -62,16 +62,17 @@ export default function App() {
 
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    const updateLenis = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
+    gsap.ticker.add(updateLenis);
 
     gsap.ticker.lagSmoothing(0);
 
     // 2. Setup GSAP ScrollTrigger for horizontal scroll on desktop
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
     let pinScrollTrigger: ScrollTrigger | null = null;
-    let cardTriggers: ScrollTrigger[] = [];
+    const cardTriggers: ScrollTrigger[] = [];
 
     if (isDesktop && containerRef.current && timelineRef.current) {
       const timelineWidth = timelineRef.current.scrollWidth;
@@ -155,7 +156,7 @@ export default function App() {
     // Cleanup
     return () => {
       lenis.destroy();
-      gsap.ticker.remove(lenis.raf);
+      gsap.ticker.remove(updateLenis);
       if (pinScrollTrigger) pinScrollTrigger.kill();
       cardTriggers.forEach(t => t.kill());
       ScrollTrigger.getAll().forEach(t => t.kill());

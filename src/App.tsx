@@ -3,14 +3,11 @@ import EarthMap from './components/EarthMap';
 import TimelineControls from './components/TimelineControls';
 import type { TimelineNode } from './components/TimelineControls';
 import InfoPanel from './components/InfoPanel';
-import { historicalEras } from './data/historicalData';
 import { Globe2 } from 'lucide-react';
 import { fetchNearbyHistoricalArticles } from './services/wikipediaApi';
 import type { WikiArticle } from './services/wikipediaApi';
 
 export default function App() {
-  const activeEraIndex = 0; // Only used for initial view
-  
   // Wikipedia integration states
   const [articles, setArticles] = useState<WikiArticle[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'success' | 'empty'>('idle');
@@ -66,7 +63,6 @@ export default function App() {
     <div className="relative w-screen h-screen overflow-hidden bg-black font-sans selection:bg-amber-500/30">
       
       <EarthMap 
-        activeEra={historicalEras[activeEraIndex]} 
         articles={articles}
         onGlobeClick={handleGlobeClick}
         selectedArticleId={selectedArticleId}

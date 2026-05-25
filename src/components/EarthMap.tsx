@@ -1,125 +1,154 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
-import Globe from 'react-globe.gl';
-import type { GlobeMethods } from 'react-globe.gl';
-import type { HistoricalEra } from '../data/historicalData';
+import { useEffect, useRef } from 'react';
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { WikiArticle } from '../services/wikipediaApi';
 
 interface EarthMapProps {
-  activeEra: HistoricalEra;
   articles: WikiArticle[];
   onGlobeClick: (lat: number, lng: number) => void;
   selectedArticleId: number | null;
   onArticleClick: (id: number) => void;
 }
 
-export default function EarthMap({ activeEra, articles, onGlobeClick, selectedArticleId, onArticleClick }: EarthMapProps) {
-  const globeRef = useRef<GlobeMethods | undefined>(undefined);
-  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+export default function EarthMap({ articles, onGlobeClick, selectedArticleId, onArticleClick }: EarthMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<Cesium.Viewer | null>(null);
 
-  // Handle window resize
   useEffect(() => {
-    const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (!containerRef.current || viewerRef.current) return;
+
+    const initViewer = async () => {
+      const viewer = new Cesium.Viewer(containerRef.current!, {
+        animation: false,
+        baseLayerPicker: false,
+        baseLayer: false, // Don't add default imagery
+        fullscreenButton: false,
+        vrButton: false,
+        geocoder: false,
+        homeButton: false,
+        infoBox: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        navigationHelpButton: false,
+        navigationInstructionsInitiallyVisible: false,
+        scene3DOnly: true
+      });
+
+      // Remove credits for a cleaner UI
+      viewer.cesiumWidget.creditContainer.setAttribute('style', 'display: none;');
+
+      try {
+        // 1. High-Res Satellite Imagery
+        const baseProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        );
+        viewer.imageryLayers.addImageryProvider(baseProvider);
+
+        // 2. Add Boundaries and Places Overlay
+        const overlayProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer'
+        );
+        viewer.imageryLayers.addImageryProvider(overlayProvider);
+
+        // 3. Add Roads and Transportation Overlay
+        const roadsProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer'
+        );
+        viewer.imageryLayers.addImageryProvider(roadsProvider);
+      } catch (e) {
+        console.error("Failed to load Esri layers", e);
+      }
+
+      // Post-processing for a sci-fi/cinematic look
+      viewer.scene.globe.enableLighting = true;
+      viewer.scene.highDynamicRange = true;
+
+      // Handle Globe Clicks
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction((click: any) => {
+        // Check if we clicked on an entity (marker)
+        const pickedObject = viewer.scene.pick(click.position);
+        if (Cesium.defined(pickedObject) && pickedObject.id) {
+          // User clicked a marker
+          if (pickedObject.id.name) { // Use name field as the pageid for articles
+            const pageId = parseInt(pickedObject.id.name);
+            if (!isNaN(pageId)) {
+              onArticleClick(pageId);
+              return;
+            }
+          }
+        }
+
+        // User clicked on the globe itself
+        const earthPosition = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+        if (Cesium.defined(earthPosition)) {
+          const cartographic = Cesium.Cartographic.fromCartesian(earthPosition!);
+          const lng = Cesium.Math.toDegrees(cartographic.longitude);
+          const lat = Cesium.Math.toDegrees(cartographic.latitude);
+          onGlobeClick(lat, lng);
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      viewerRef.current = viewer;
+    };
+    
+    initViewer();
+
+    return () => {
+      if (viewerRef.current) {
+        // Destroy handler is handled by viewer.destroy() usually, but let's be safe
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
+    };
   }, []);
 
-  // When era changes, and we have NO custom articles, fly to era center
-  // If we have custom articles, we let the user control the camera
+  // Handle articles update (markers)
   useEffect(() => {
-    if (globeRef.current) {
-      // Fix blurry textures on high DPI screens
-      try {
-        const renderer = globeRef.current.renderer();
-        if (renderer) {
-          renderer.setPixelRatio(window.devicePixelRatio);
-        }
-      } catch (e) {
-        // Ignore if renderer is not accessible
-      }
+    if (!viewerRef.current) return;
+    const viewer = viewerRef.current;
 
-      if (articles.length === 0) {
-        const [lng, lat] = activeEra.center;
-        const altitude = Math.max(1.0, 3.5 - activeEra.zoom * 0.5); 
-        globeRef.current.pointOfView({ lat, lng, altitude }, 2000);
-      }
-    }
-  }, [activeEra, articles.length]);
+    // Clear existing markers
+    viewer.entities.removeAll();
 
-  // Points to render: if we have articles, show them. Otherwise show default era places.
-  const pointsData = useMemo(() => {
     if (articles.length > 0) {
-      return articles.map(a => ({
-        id: a.pageid,
-        lat: a.lat,
-        lng: a.lon,
-        size: selectedArticleId === a.pageid ? 0.2 : 0.08,
-        color: selectedArticleId === a.pageid ? '#ef4444' : '#fbbf24', // red if selected, amber otherwise
-        name: a.title
-      }));
-    }
+      // Render Wikipedia articles as markers
+      articles.forEach(a => {
+        const isSelected = selectedArticleId === a.pageid;
+        
+        viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(a.lon, a.lat),
+          name: a.pageid.toString(), // store pageid in name field
+          point: {
+            pixelSize: isSelected ? 12 : 8,
+            color: isSelected ? Cesium.Color.RED : Cesium.Color.ORANGE,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+          },
+          label: {
+            text: a.title,
+            font: isSelected ? 'bold 16px sans-serif' : '12px sans-serif',
+            fillColor: isSelected ? Cesium.Color.RED : Cesium.Color.WHITE,
+            outlineColor: Cesium.Color.BLACK,
+            outlineWidth: 4,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -15),
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+          }
+        });
+      });
 
-    return activeEra.places.features.map((f: any) => ({
-      id: f.properties.name, // fallback id
-      lat: f.geometry.coordinates[1],
-      lng: f.geometry.coordinates[0],
-      size: f.properties.type === 'capital' ? 0.15 : 0.08,
-      color: f.properties.type === 'capital' ? '#fbbf24' : '#fef3c7',
-      name: f.properties.name
-    }));
-  }, [activeEra, articles, selectedArticleId]);
+      // Optional: don't fly to bounds automatically every time, 
+      // let user control camera, just update highlights.
+    }
+  }, [articles, selectedArticleId]);
 
   return (
     <div className="absolute inset-0 w-full h-full bg-black cursor-crosshair">
-      <Globe
-        ref={globeRef as any}
-        width={dimensions.width}
-        height={dimensions.height}
-        
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-        bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-        backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-        
-        atmosphereColor="#3a228a"
-        atmosphereAltitude={0.15}
-        
-        pointsData={pointsData}
-        pointLat="lat"
-        pointLng="lng"
-        pointColor="color"
-        pointAltitude={0.02}
-        pointRadius="size"
-        pointsMerge={false}
-        onPointClick={(point: any) => onArticleClick(point.id)}
-        
-        htmlElementsData={pointsData}
-        htmlElement={(d: any) => {
-          const el = document.createElement('div');
-          const isSelected = selectedArticleId === d.id;
-          el.innerHTML = `
-            <div style="
-              color: ${isSelected ? '#ef4444' : 'white'}; 
-              font-weight: bold; 
-              font-size: ${isSelected ? '16px' : '12px'}; 
-              text-shadow: 0px 0px 4px black, 0px 0px 8px black; 
-              background: rgba(0,0,0,0.4); 
-              padding: 2px 6px; 
-              border-radius: 4px; 
-              pointer-events: none;
-              transition: all 0.3s;
-              border: ${isSelected ? '1px solid #ef4444' : 'none'};
-            ">
-              ${d.name}
-            </div>
-          `;
-          return el;
-        }}
-        htmlAltitude={0.05}
-        
-        // Handle globe click
-        onGlobeClick={({ lat, lng }) => {
-          onGlobeClick(lat, lng);
-        }}
-      />
+      <div ref={containerRef} className="w-full h-full" />
     </div>
   );
 }

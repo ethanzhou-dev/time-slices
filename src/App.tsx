@@ -114,6 +114,7 @@ export default function App() {
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <md-fab 
           variant="primary"
+          style={{ '--md-fab-container-shape': '9999px' } as any}
           label={searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
           onClick={handleScanViewport}
           disabled={searchStatus === 'loading' || undefined}

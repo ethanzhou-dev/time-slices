@@ -46,6 +46,7 @@ export default function App() {
   const [articles, setArticles] = useState<WikiArticle[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
 
   // Generate dynamic timeline nodes based on fetched articles that have years
   const timelineNodes = useMemo<TimelineNode[]>(() => {
@@ -103,7 +104,38 @@ export default function App() {
           onGlobeClick={handleGlobeClick}
           selectedArticleId={selectedArticleId}
           onArticleClick={setSelectedArticleId}
+          onMouseMove={(x, y) => setMousePos({ x, y })}
         />
+
+        {/* Mouse Radar Cursor */}
+        {mousePos && (
+          <Box sx={{
+            position: 'absolute',
+            left: mousePos.x,
+            top: mousePos.y,
+            width: 120, // 视觉上较大的圆圈
+            height: 120,
+            transform: 'translate(-50%, -50%)',
+            borderRadius: '50%',
+            border: '2px solid rgba(245, 158, 11, 0.5)',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            pointerEvents: 'none',
+            zIndex: 5, // 低于 UI 层，高于地图层
+            transition: 'opacity 0.2s',
+            opacity: searchStatus === 'loading' ? 0 : 1, // 扫描时隐藏雷达圈
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 4,
+              height: 4,
+              backgroundColor: 'rgba(245, 158, 11, 0.8)',
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)'
+            }
+          }} />
+        )}
 
         {/* Header Overlay */}
         <Box sx={{ 

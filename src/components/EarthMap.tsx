@@ -8,9 +8,10 @@ interface EarthMapProps {
   onGlobeClick: (lat: number, lng: number) => void;
   selectedArticleId: number | null;
   onArticleClick: (id: number) => void;
+  onMouseMove?: (x: number, y: number) => void;
 }
 
-export default function EarthMap({ articles, onGlobeClick, selectedArticleId, onArticleClick }: EarthMapProps) {
+export default function EarthMap({ articles, onGlobeClick, selectedArticleId, onArticleClick, onMouseMove }: EarthMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
 
@@ -59,21 +60,7 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
       if (viewer.scene.sun) viewer.scene.sun.show = false;
       if (viewer.scene.moon) viewer.scene.moon.show = false;
 
-      // === 新增：3D 探照雷达圈 ===
-      const scanCircle = viewer.entities.add({
-        id: 'scan-radar-circle',
-        ellipse: {
-          semiMinorAxis: 10000.0, // 10公里半径
-          semiMajorAxis: 10000.0,
-          material: Cesium.Color.fromCssColorString('#f59e0b').withAlpha(0.15),
-          outline: true,
-          outlineColor: Cesium.Color.fromCssColorString('#f59e0b').withAlpha(0.5),
-          outlineWidth: 2,
-        },
-        show: false
-      });
-
-      // 鼠标点击事件监听
+      // Handle Map Clicks
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction((click: any) => {
         const pickedObject = viewer.scene.pick(click.position);
@@ -96,19 +83,10 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-      // === 新增：监听鼠标移动，实时更新雷达圈位置 ===
+      // 鼠标移动时更新 UI 扫描圈位置（通过 React state），同时为了保持性能，我们不需要在这里触发 Cesium 重绘
       handler.setInputAction((movement: any) => {
-        const earthPosition = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
-        if (earthPosition) {
-          scanCircle.position = new Cesium.ConstantPositionProperty(earthPosition);
-          scanCircle.show = true;
-          // 由于开启了按需渲染，必须手动触发渲染，否则雷达圈移动时会卡顿
-          viewer.scene.requestRender();
-        } else {
-          if (scanCircle.show) {
-            scanCircle.show = false;
-            viewer.scene.requestRender();
-          }
+        if (onMouseMove) {
+          onMouseMove(movement.endPosition.x, movement.endPosition.y);
         }
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -172,7 +150,7 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
   }, [articles, selectedArticleId]);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black cursor-crosshair">
+    <div className="absolute inset-0 w-full h-full bg-black" style={{ cursor: 'none' }}>
       <div ref={containerRef} className="w-full h-full" />
     </div>
   );

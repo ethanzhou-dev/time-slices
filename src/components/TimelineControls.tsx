@@ -1,5 +1,6 @@
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
+import { useEffect, useRef } from 'react';
 
 export interface TimelineNode {
   id: number;
@@ -14,6 +15,18 @@ interface TimelineControlsProps {
 }
 
 export default function TimelineControls({ nodes, activeIndex, onNodeChange }: TimelineControlsProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll active item into view
+    if (containerRef.current) {
+      const activeEl = containerRef.current.children[activeIndex] as HTMLElement;
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeIndex]);
+
   if (nodes.length === 0) return null;
 
   const handlePrev = () => {
@@ -25,51 +38,53 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
   };
 
   return (
-    <div className="absolute right-6 top-24 bottom-24 w-24 bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] rounded-3xl flex flex-col items-center py-4 z-10 shadow-none animate-in fade-in duration-300">
+    <div className="absolute right-6 top-24 bottom-24 w-28 bg-surface-container-low border border-outline-variant rounded-3xl flex flex-col items-center py-4 z-10 shadow-none animate-in fade-in duration-300">
       <md-icon-button 
         onClick={handlePrev} 
         disabled={activeIndex === 0 || undefined}
-        className="mb-4"
+        className="mb-2 shrink-0"
       >
         <md-icon>keyboard_arrow_up</md-icon>
       </md-icon-button>
 
-      <div className="flex-1 w-full relative flex flex-col items-center justify-between py-4">
+      <div className="flex-1 w-full relative flex flex-col overflow-y-auto no-scrollbar py-4" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
         {/* Vertical Track Line */}
-        <div className="absolute left-1/2 top-4 bottom-4 w-1 -translate-x-1/2 bg-[var(--md-sys-color-surface-variant)] rounded-full"></div>
+        <div className="absolute left-[calc(100%-20px)] top-4 bottom-4 w-1 -translate-x-1/2 bg-surface-variant rounded-full"></div>
         
         {/* Nodes */}
-        {nodes.map((node, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={node.id}
-              onClick={() => onNodeChange(index)}
-              className="relative w-full flex items-center justify-end px-2 group cursor-pointer bg-transparent border-none"
-            >
-              <span 
-                className={`
-                  text-xs mr-4 transition-colors duration-300 whitespace-nowrap
-                  ${isActive ? 'text-[var(--md-sys-color-primary)] font-bold' : 'text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-on-surface)]'}
-                `}
+        <div ref={containerRef} className="flex flex-col gap-6 w-full relative z-10">
+          {nodes.map((node, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={node.id}
+                onClick={() => onNodeChange(index)}
+                className="relative w-full flex items-center justify-end pr-[20px] group cursor-pointer bg-transparent border-none shrink-0"
               >
-                {node.label}
-              </span>
-              <div 
-                className={`
-                  absolute right-1/2 translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all duration-300 z-10
-                  ${isActive ? 'bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] scale-110 shadow-[0_0_8px_var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)] group-hover:border-[var(--md-sys-color-on-surface)]'}
-                `}
-              />
-            </button>
-          );
-        })}
+                <span 
+                  className={`
+                    text-xs mr-4 transition-colors duration-300 whitespace-nowrap
+                    ${isActive ? 'text-primary font-bold' : 'text-on-surface-variant group-hover:text-on-surface'}
+                  `}
+                >
+                  {node.label}
+                </span>
+                <div 
+                  className={`
+                    absolute right-[20px] translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all duration-300
+                    ${isActive ? 'bg-primary border-primary scale-110 shadow-[0_0_8px_var(--md-sys-color-primary)]' : 'bg-surface-container-low border-outline group-hover:border-on-surface'}
+                  `}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <md-icon-button 
         onClick={handleNext} 
         disabled={activeIndex === nodes.length - 1 || undefined}
-        className="mt-4"
+        className="mt-2 shrink-0"
       >
         <md-icon>keyboard_arrow_down</md-icon>
       </md-icon-button>

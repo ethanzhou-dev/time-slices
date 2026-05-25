@@ -67,7 +67,7 @@ export default function App() {
   const selectedArticle = articles.find(a => a.pageid === selectedArticleId) || null;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[var(--md-sys-color-background)]">
+    <div className="relative w-screen h-screen overflow-hidden bg-background">
       
       <EarthMap 
         ref={earthMapRef}
@@ -79,14 +79,14 @@ export default function App() {
       {/* Header Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 flex items-center justify-between z-10 pointer-events-none bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-4 pointer-events-auto">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-primary)] shadow-[0_0_15px_rgba(208,188,255,0.5)]">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary shadow-[0_0_15px_rgba(208,188,255,0.5)]">
             <md-icon style={{ color: 'var(--md-sys-color-on-primary)' }}>public</md-icon>
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight leading-none text-white m-0">
-              Terra<span className="text-[var(--md-sys-color-primary)]">Chronos</span>
+              Terra<span className="text-primary">Chronos</span>
             </h1>
-            <p className="text-[var(--md-sys-color-outline)] font-bold tracking-widest text-xs uppercase m-0 mt-1">
+            <p className="text-outline font-bold tracking-widest text-xs uppercase m-0 mt-1">
               互动历史
             </p>
           </div>

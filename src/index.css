@@ -8,11 +8,19 @@
   --color-on-primary: #381E72;
   --color-primary-container: #4F378B;
   --color-on-primary-container: #EADDFF;
+  --color-secondary: #CCC2DC;
+  --color-on-secondary: #332D41;
+  --color-error: #F2B8B5;
+  --color-on-error: #601410;
   --color-surface: #141218;
   --color-on-surface: #E6E0E9;
+  --color-surface-variant: #49454F;
+  --color-on-surface-variant: #CAC4D0;
   --color-surface-container-low: #1D1B20;
+  --color-surface-container: #211F26;
   --color-surface-container-high: #2B2930;
   --color-outline: #938F99;
+  --color-outline-variant: #49454F;
 }
 
 :root {

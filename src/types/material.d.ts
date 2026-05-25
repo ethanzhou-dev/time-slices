@@ -41,6 +41,16 @@ declare module 'react' {
         class?: string;
         slot?: string;
       };
+      'md-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        class?: string;
+        slot?: string;
+      };
+      'md-list-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        type?: 'text' | 'button' | 'link';
+        disabled?: boolean;
+        class?: string;
+        slot?: string;
+      };
     }
   }
 }

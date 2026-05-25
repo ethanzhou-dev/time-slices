@@ -19,7 +19,7 @@ interface EarthMapProps {
 const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
-  const [markerPositions, setMarkerPositions] = useState<Record<number, { x: number, y: number, show: boolean }>>({});
+  const markerRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -118,9 +118,10 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     viewer.entities.removeAll();
 
     const updatePositions = () => {
-      const newPositions: Record<number, { x: number, y: number, show: boolean }> = {};
-      
       articles.forEach(a => {
+        const el = markerRefs.current[a.pageid];
+        if (!el) return;
+
         const position = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
         
         // 检查点是否在地球背面（地平线剔除）
@@ -133,16 +134,19 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
           // 在较新的 Cesium 版本中，wgs84ToWindowCoordinates 已被重命名为 worldToWindowCoordinates
           const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, position);
           if (screenPosition) {
-            newPositions[a.pageid] = { x: screenPosition.x, y: screenPosition.y, show: true };
+            // 核心性能优化：通过 translate3d 开启 GPU 硬件加速，并直接操作 DOM，避免 React 每帧渲染导致卡顿
+            el.style.transform = `translate3d(${screenPosition.x}px, ${screenPosition.y}px, 0)`;
+            el.style.opacity = '1';
+            el.style.pointerEvents = 'auto';
           } else {
-            newPositions[a.pageid] = { x: 0, y: 0, show: false };
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
           }
         } else {
-          newPositions[a.pageid] = { x: 0, y: 0, show: false };
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
         }
       });
-      
-      setMarkerPositions(newPositions);
     };
 
     // 监听渲染前事件，实时计算屏幕坐标
@@ -156,7 +160,7 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     return () => {
       viewer.scene.preRender.removeEventListener(updatePositions);
     };
-  }, [articles]);
+  }, [articles, selectedArticleId]);
 
   return (
     <div className="absolute inset-0 w-full h-full bg-black overflow-hidden relative">
@@ -165,44 +169,53 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
       {/* HTML Markers Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {articles.map(a => {
-          const pos = markerPositions[a.pageid];
-          if (!pos || !pos.show) return null;
-          
           const isSelected = selectedArticleId === a.pageid;
           
           return (
             <div 
               key={a.pageid}
-              className={`absolute pointer-events-auto flex flex-col items-center transform -translate-x-1/2 -translate-y-[100%] transition-transform duration-75 cursor-pointer ${isSelected ? 'z-50' : 'z-10'}`}
-              style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onArticleClick(a.pageid);
-              }}
+              ref={(el) => { markerRefs.current[a.pageid] = el; }}
+              className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none ${isSelected ? 'z-50' : 'z-10'}`}
             >
-              {/* MD3 Marker */}
-              <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-100 hover:scale-110'}`}>
-                {isSelected ? (
-                  <md-fab size="small" variant="primary" class="pointer-events-none">
-                    <MapPin className="w-5 h-5" slot="icon" />
-                  </md-fab>
-                ) : (
-                  <md-fab size="small" variant="surface" class="pointer-events-none">
-                    <MapPin className="w-5 h-5" style={{ color: 'var(--md-sys-color-on-surface-variant)' }} slot="icon" />
-                  </md-fab>
-                )}
-                {/* 底部三角形指示器 (模仿地图图钉) */}
-                <div className={`absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] ${isSelected ? 'border-t-[var(--md-sys-color-primary)]' : 'border-t-[var(--md-sys-color-surface-container-highest)]'}`}></div>
+              {/* Marker Icon 容器（原点对齐到底部中心） */}
+              <div 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center cursor-pointer pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onArticleClick(a.pageid);
+                }}
+              >
+                <div className={`relative transition-transform duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-100 hover:scale-110'}`}>
+                  {isSelected ? (
+                    <md-fab size="small" variant="primary" class="pointer-events-none">
+                      <MapPin className="w-5 h-5" slot="icon" />
+                    </md-fab>
+                  ) : (
+                    <md-fab size="small" variant="surface" class="pointer-events-none">
+                      <MapPin className="w-5 h-5" style={{ color: 'var(--md-sys-color-on-surface-variant)' }} slot="icon" />
+                    </md-fab>
+                  )}
+                  {/* 底部三角形指示器 */}
+                  <div className={`absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] ${isSelected ? 'border-t-[var(--md-sys-color-primary)]' : 'border-t-[var(--md-sys-color-surface-container-highest)]'}`}></div>
+                </div>
               </div>
               
-              {/* Label */}
-              <div className={`mt-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
-                isSelected 
-                  ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg' 
-                  : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow opacity-90 hover:opacity-100'
-              }`}>
-                <md-elevation level={isSelected ? 3 : 1}></md-elevation>
-                {a.title}
+              {/* Label 容器（原点对齐到顶部中心） */}
+              <div 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 mt-2 cursor-pointer pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onArticleClick(a.pageid);
+                }}
+              >
+                <div className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
+                  isSelected 
+                    ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg' 
+                    : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow opacity-90 hover:opacity-100'
+                }`}>
+                  <md-elevation level={isSelected ? 3 : 1}></md-elevation>
+                  {a.title}
+                </div>
               </div>
             </div>
           );

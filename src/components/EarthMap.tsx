@@ -124,11 +124,14 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
         const position = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
         
         // 检查点是否在地球背面（地平线剔除）
-        const occluder = new Cesium.EllipsoidalOccluder(viewer.scene.globe.ellipsoid, viewer.camera.position);
-        const isVisible = occluder.isPointVisible(position);
+        // 计算地表法线与相机的夹角
+        const normal = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(position);
+        const toCamera = Cesium.Cartesian3.subtract(viewer.camera.positionWC, position, new Cesium.Cartesian3());
+        const isVisible = Cesium.Cartesian3.dot(normal, toCamera) > 0;
 
         if (isVisible) {
-          const screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
+          // 在较新的 Cesium 版本中，wgs84ToWindowCoordinates 已被重命名为 worldToWindowCoordinates
+          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, position);
           if (screenPosition) {
             newPositions[a.pageid] = { x: screenPosition.x, y: screenPosition.y, show: true };
           } else {

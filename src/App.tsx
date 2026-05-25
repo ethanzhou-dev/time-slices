@@ -69,25 +69,24 @@ export default function App() {
 
     gsap.ticker.lagSmoothing(0);
 
-    // 2. Setup GSAP ScrollTrigger for horizontal scroll on desktop
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-    let pinScrollTrigger: ScrollTrigger | null = null;
-    const cardTriggers: ScrollTrigger[] = [];
+    // 2. Setup GSAP MatchMedia for responsive animations
+    const mm = gsap.matchMedia();
 
-    if (isDesktop && containerRef.current && timelineRef.current) {
+    mm.add("(min-width: 768px)", () => {
+      // --- Desktop Horizontal Scroll ---
+      if (!containerRef.current || !timelineRef.current) return;
       const timelineWidth = timelineRef.current.scrollWidth;
       const windowWidth = window.innerWidth;
       
-      // Calculate how far to move left
       const xTranslate = -(timelineWidth - windowWidth);
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           pin: true,
-          scrub: 1, // Smooth scrub
+          scrub: 1,
           start: 'top top',
-          end: () => `+=${timelineWidth}`, // Scroll distance equals content width
+          end: () => `+=${timelineWidth}`,
           invalidateOnRefresh: true,
         }
       });
@@ -97,48 +96,36 @@ export default function App() {
         ease: 'none',
       });
 
-      pinScrollTrigger = tl.scrollTrigger as ScrollTrigger;
-
       // Parallax effect for year watermarks
-      gsap.utils.toArray<HTMLElement>('.year-watermark').forEach((yearElem) => {
-        gsap.to(yearElem, {
-          x: () => (timelineWidth - windowWidth) * 0.2, // Move slower than content (parallax)
-          ease: 'none',
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: 'top top',
-            end: () => `+=${timelineWidth}`,
-            scrub: 1,
-            invalidateOnRefresh: true,
-          }
-        });
-      });
+      tl.to('.year-watermark', {
+        x: () => (timelineWidth - windowWidth) * 0.2,
+        ease: 'none',
+      }, 0);
 
-      // Fade-in-up animation for cards entering from right (in horizontal scroll context)
-      cardsRef.current.forEach((card, index) => {
+      // Fade-in-up animation using containerAnimation
+      cardsRef.current.forEach((card) => {
         if (!card) return;
         
-        // Use container scroll progression to trigger card animations
-        const trigger = ScrollTrigger.create({
-          trigger: containerRef.current,
-          start: () => `top top-=${index * (windowWidth * 0.6)}`, // Rough estimation for trigger point
-          end: () => `top top-=${(index + 1) * (windowWidth * 0.6)}`,
+        ScrollTrigger.create({
+          trigger: card,
+          containerAnimation: tl,
+          start: 'left 85%', // Trigger when card's left side reaches 85% of viewport
           onEnter: () => {
              gsap.fromTo(card.querySelector('.card-content'), 
                { y: 50, opacity: 0 },
                { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }
              );
           },
-          // Allows reverse animation if needed, or just let them stay visible
         });
-        cardTriggers.push(trigger);
       });
-    } else {
-      // Mobile vertical scroll animations
+    });
+
+    mm.add("(max-width: 767px)", () => {
+      // --- Mobile Vertical Scroll ---
       cardsRef.current.forEach((card) => {
         if (!card) return;
         
-        const trigger = ScrollTrigger.create({
+        ScrollTrigger.create({
           trigger: card,
           start: 'top 85%',
           onEnter: () => {
@@ -149,17 +136,14 @@ export default function App() {
           },
           once: true
         });
-        cardTriggers.push(trigger);
       });
-    }
+    });
 
     // Cleanup
     return () => {
+      mm.revert();
       lenis.destroy();
       gsap.ticker.remove(updateLenis);
-      if (pinScrollTrigger) pinScrollTrigger.kill();
-      cardTriggers.forEach(t => t.kill());
-      ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, []);
 
@@ -179,7 +163,7 @@ export default function App() {
       </section>
 
       {/* Timeline Horizontal Scroll Section */}
-      <section ref={containerRef} className="relative h-screen flex flex-col justify-center">
+      <section ref={containerRef} className="relative min-h-screen md:h-screen flex flex-col justify-start md:justify-center py-24 md:py-0 overflow-hidden">
         
         {/* The horizontal scrolling track */}
         <div 

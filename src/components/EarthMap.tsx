@@ -129,6 +129,12 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
       
       // 当数据更新时，由于启用了 requestRenderMode，需要手动触发一次渲染
       viewer.scene.requestRender();
+
+      // 自动聚焦定位：平滑飞向扫描出的所有历史标记点
+      viewer.flyTo(viewer.entities, {
+        duration: 2.0,
+        offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-45), 15000) // 保持一定的倾斜视角和高度
+      });
     }
   }, [articles, selectedArticleId]);
 

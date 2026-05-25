@@ -1,4 +1,6 @@
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Box, Slider, Typography, Fade, Paper, IconButton } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export interface TimelineNode {
   id: number;
@@ -15,6 +17,28 @@ interface TimelineControlsProps {
 export default function TimelineControls({ nodes, activeIndex, onNodeChange }: TimelineControlsProps) {
   if (nodes.length === 0) return null;
 
+  const marks = nodes.map((node, index) => ({
+    value: index,
+    label: (
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          color: index === activeIndex ? 'primary.main' : 'text.secondary',
+          fontWeight: index === activeIndex ? 'bold' : 'normal',
+          transition: 'color 0.3s',
+          whiteSpace: 'nowrap',
+          mr: 1
+        }}
+      >
+        {node.label}
+      </Typography>
+    )
+  }));
+
+  const handleSliderChange = (_event: Event, newValue: number | number[]) => {
+    onNodeChange(newValue as number);
+  };
+
   const handlePrev = () => {
     if (activeIndex > 0) onNodeChange(activeIndex - 1);
   };
@@ -24,53 +48,58 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
   };
 
   return (
-    <div className="absolute right-6 top-24 bottom-24 w-16 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-full shadow-2xl flex flex-col items-center justify-between py-6 pointer-events-auto z-10">
-      
-      <button 
-        onClick={handlePrev}
-        disabled={activeIndex === 0}
-        className="p-2 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    <Fade in={true}>
+      <Paper 
+        elevation={24}
+        sx={{
+          position: 'absolute', right: 24, top: 96, bottom: 96, width: 80,
+          bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 8, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', py: 2, zIndex: 10
+        }}
       >
-        <ChevronUp size={20} />
-      </button>
+        <IconButton 
+          onClick={handlePrev} 
+          disabled={activeIndex === 0}
+          color="primary"
+          sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          <KeyboardArrowUpIcon />
+        </IconButton>
 
-      {/* Vertical Track */}
-      <div className="flex-1 relative w-2 my-4 bg-zinc-800 rounded-full flex flex-col items-center">
-        {/* Active progress bar */}
-        <div 
-          className="absolute top-0 w-full bg-amber-500 rounded-full transition-all duration-700 ease-out"
-          style={{ height: nodes.length > 1 ? `${(activeIndex / (nodes.length - 1)) * 100}%` : '100%' }}
-        />
+        <Box sx={{ flex: 1, my: 2 }}>
+          <Slider
+            orientation="vertical"
+            value={activeIndex}
+            min={0}
+            max={nodes.length - 1}
+            step={1}
+            marks={marks}
+            onChange={handleSliderChange}
+            color="primary"
+            sx={{
+              '& .MuiSlider-markLabel': {
+                left: '-16px', // Move labels to the left of the slider
+                transform: 'translateX(-100%) translateY(50%)',
+              },
+              '& .MuiSlider-thumb': {
+                width: 20,
+                height: 20,
+              }
+            }}
+          />
+        </Box>
 
-        {/* Era Stops */}
-        {nodes.map((node, index) => (
-          <div 
-            key={node.id} 
-            className="absolute transform -translate-y-1/2 flex items-center cursor-pointer group"
-            style={{ top: nodes.length > 1 ? `${(index / (nodes.length - 1)) * 100}%` : '50%' }}
-            onClick={() => onNodeChange(index)}
-          >
-            <div 
-              className={`w-4 h-4 rounded-full border-2 transition-all duration-300 z-10 absolute left-1/2 -translate-x-1/2
-                ${index <= activeIndex ? 'bg-amber-500 border-black' : 'bg-zinc-700 border-zinc-900'}
-                group-hover:scale-125
-              `}
-            />
-            {/* Tooltip on hover */}
-            <span className="absolute right-8 px-2 py-1 bg-zinc-900 text-amber-400 text-xs font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-zinc-800">
-              {node.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <button 
-        onClick={handleNext}
-        disabled={activeIndex === nodes.length - 1}
-        className="p-2 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <ChevronDown size={20} />
-      </button>
-    </div>
+        <IconButton 
+          onClick={handleNext} 
+          disabled={activeIndex === nodes.length - 1}
+          color="primary"
+          sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          <KeyboardArrowDownIcon />
+        </IconButton>
+      </Paper>
+    </Fade>
   );
 }

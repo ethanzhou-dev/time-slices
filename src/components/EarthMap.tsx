@@ -185,37 +185,35 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
                   onArticleClick(a.pageid);
                 }}
               >
-                <div className={`relative transition-all duration-300 flex flex-col items-center ${isSelected ? 'scale-110 -translate-y-1' : 'scale-100 group-hover:scale-110'}`}>
-                  {/* Head */}
-                  <div className={`flex items-center justify-center rounded-full shadow-sm transition-all duration-300 ${
-                    isSelected 
-                      ? 'w-10 h-10 bg-[var(--md-sys-color-primary)] shadow-md ring-4 ring-[var(--md-sys-color-primary-container)]' 
-                      : 'w-5 h-5 bg-[var(--md-sys-color-secondary-container)] border-[1.5px] border-[var(--md-sys-color-outline)] group-hover:bg-[var(--md-sys-color-primary)] group-hover:border-[var(--md-sys-color-primary)]'
-                  }`}>
-                    {isSelected ? (
-                      <MapPin className="w-5 h-5 text-[var(--md-sys-color-on-primary)]" />
-                    ) : (
-                      <div className="w-2 h-2 bg-[var(--md-sys-color-on-secondary-container)] rounded-full group-hover:bg-[var(--md-sys-color-on-primary)] transition-colors"></div>
-                    )}
-                  </div>
-                  
-                  {/* Pointy Bottom */}
+                <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-75 origin-bottom opacity-90 hover:scale-90 hover:opacity-100'}`}>
+                  {isSelected ? (
+                    <md-fab size="small" variant="primary" class="pointer-events-none">
+                      <MapPin className="w-5 h-5" slot="icon" />
+                    </md-fab>
+                  ) : (
+                    <md-fab size="small" variant="secondary" class="pointer-events-none">
+                      <MapPin className="w-5 h-5" slot="icon" />
+                    </md-fab>
+                  )}
+                  {/* 底部三角形指示器 (选中的才有) */}
                   {isSelected && (
-                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[var(--md-sys-color-primary)] mt-0.5"></div>
+                    <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[var(--md-sys-color-primary)]"></div>
                   )}
                 </div>
               </div>
               
-              {/* Label 容器（原点对齐到顶部中心） */}
+              {/* Label 容器（原点对齐到顶部中心，保持显示） */}
               <div 
-                className={`absolute top-0 left-1/2 transform -translate-x-1/2 mt-1.5 pointer-events-none transition-all duration-300 ${
-                  isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'
-                }`}
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 mt-1.5 cursor-pointer pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onArticleClick(a.pageid);
+                }}
               >
-                <div className={`px-2.5 py-1.5 rounded-lg text-xs font-medium relative overflow-hidden whitespace-nowrap ${
+                <div className={`transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
                   isSelected 
-                    ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg' 
-                    : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow-md'
+                    ? 'px-3 py-1.5 rounded-lg text-sm font-bold bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg scale-100' 
+                    : 'px-2 py-1 rounded-md text-xs font-medium bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)] shadow-sm border border-[var(--md-sys-color-outline-variant)] scale-95 opacity-80 hover:opacity-100 hover:scale-100'
                 }`}>
                   <md-elevation level={isSelected ? 3 : 1}></md-elevation>
                   {a.title}

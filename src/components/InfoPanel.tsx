@@ -53,7 +53,7 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
     );
   }
 
-  if (searchStatus === 'too_many') {
+  if (searchStatus === 'too_large') {
     return (
       <Fade in={true}>
         <Card 
@@ -66,9 +66,9 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
           }}
         >
           <SearchOffIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>信息过载</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>视野过大</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            该区域（如市中心）历史遗迹过于密集。为保证体验流畅并防止信息爆炸，系统已熔断扫描。请尝试点击非市中心的具体边缘区域。
+            当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
           </Typography>
         </Card>
       </Fade>
@@ -90,7 +90,7 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
           <TravelExploreIcon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
           <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>探索世界</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            点击地球上的任意位置，发现附近的历史事件、古代遗址和重要地点。拖动时间轴可按时代筛选。
+            移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
           </Typography>
         </Card>
       </Fade>

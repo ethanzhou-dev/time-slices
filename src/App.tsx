@@ -1,11 +1,13 @@
-import { useState, useMemo } from 'react';
-import { ThemeProvider, createTheme, CssBaseline, Box, Typography, Avatar } from '@mui/material';
+import { useState, useMemo, useRef } from 'react';
+import { ThemeProvider, createTheme, CssBaseline, Box, Typography, Avatar, Button } from '@mui/material';
 import PublicIcon from '@mui/icons-material/Public';
+import SearchIcon from '@mui/icons-material/Search';
 import EarthMap from './components/EarthMap';
+import type { EarthMapRef } from './components/EarthMap';
 import TimelineControls from './components/TimelineControls';
 import type { TimelineNode } from './components/TimelineControls';
 import InfoPanel from './components/InfoPanel';
-import { fetchNearbyHistoricalArticles } from './services/wikipediaApi';
+import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
 // Create a dark MD3 theme
@@ -46,7 +48,7 @@ export default function App() {
   const [articles, setArticles] = useState<WikiArticle[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
-  const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
+  const earthMapRef = useRef<EarthMapRef>(null);
 
   // Generate dynamic timeline nodes based on fetched articles that have years
   const timelineNodes = useMemo<TimelineNode[]>(() => {
@@ -67,18 +69,25 @@ export default function App() {
     return index !== -1 ? index : 0;
   }, [timelineNodes, selectedArticleId]);
 
-  // Handle clicking on the globe
-  const handleGlobeClick = async (lat: number, lng: number) => {
+  const handleScanViewport = async () => {
+    if (!earthMapRef.current) return;
+    
+    const bounds = earthMapRef.current.getViewportBounds();
+    if (!bounds) {
+      setSearchStatus('too_large');
+      return;
+    }
+
     setSearchStatus('loading');
     setArticles([]);
     setSelectedArticleId(null);
     
-    // Fetch articles within a 10km radius from zh.wikipedia
-    const result = await fetchNearbyHistoricalArticles(lat, lng, 10000);
+    // Fetch articles strictly within current bounds (max 100)
+    const result = await fetchArticlesInBounds(bounds.north, bounds.west, bounds.south, bounds.east);
     
     if (result.status === 'success' && result.data.length > 0) {
       setArticles(result.data);
-      // Auto-select the first article (which is the oldest if it has a year)
+      // Auto-select the first article
       setSelectedArticleId(result.data[0].pageid);
       setSearchStatus('success');
     } else {
@@ -100,42 +109,11 @@ export default function App() {
       <Box sx={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
         
         <EarthMap 
+          ref={earthMapRef}
           articles={articles}
-          onGlobeClick={handleGlobeClick}
           selectedArticleId={selectedArticleId}
           onArticleClick={setSelectedArticleId}
-          onMouseMove={(x, y) => setMousePos({ x, y })}
         />
-
-        {/* Mouse Radar Cursor */}
-        {mousePos && (
-          <Box sx={{
-            position: 'absolute',
-            left: mousePos.x,
-            top: mousePos.y,
-            width: 120, // 视觉上较大的圆圈
-            height: 120,
-            transform: 'translate(-50%, -50%)',
-            borderRadius: '50%',
-            border: '2px solid rgba(245, 158, 11, 0.5)',
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            pointerEvents: 'none',
-            zIndex: 5, // 低于 UI 层，高于地图层
-            transition: 'opacity 0.2s',
-            opacity: searchStatus === 'loading' ? 0 : 1, // 扫描时隐藏雷达圈
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 4,
-              height: 4,
-              backgroundColor: 'rgba(245, 158, 11, 0.8)',
-              borderRadius: '50%',
-              transform: 'translate(-50%, -50%)'
-            }
-          }} />
-        )}
 
         {/* Header Overlay */}
         <Box sx={{ 
@@ -174,29 +152,39 @@ export default function App() {
           />
         )}
 
-        {/* Instructions Banner */}
-        {searchStatus === 'idle' && (
-          <Box sx={{ 
-            position: 'absolute', top: 96, left: '50%', transform: 'translateX(-50%)',
-            px: 3, py: 1.5, bgcolor: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 8,
-            pointerEvents: 'none', zIndex: 10,
-            animation: 'pulse 2s infinite'
-          }}>
-            <Typography variant="body2" color="text.primary" sx={{ fontWeight: 'medium' }}>
-              👆 点击地球上的任意位置探索当地历史
-            </Typography>
-            <style>
-              {`
-                @keyframes pulse {
-                  0% { opacity: 0.7; }
-                  50% { opacity: 1; }
-                  100% { opacity: 0.7; }
-                }
-              `}
-            </style>
-          </Box>
-        )}
+        {/* Floating Scan Button */}
+        <Box sx={{
+          position: 'absolute',
+          bottom: 40,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+        }}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            startIcon={<SearchIcon />}
+            onClick={handleScanViewport}
+            disabled={searchStatus === 'loading'}
+            sx={{
+              borderRadius: 8,
+              px: 4,
+              py: 1.5,
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              boxShadow: '0 4px 20px rgba(245,158,11,0.4)',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'scale(1.05)',
+                boxShadow: '0 6px 25px rgba(245,158,11,0.6)',
+              }
+            }}
+          >
+            {searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
+          </Button>
+        </Box>
+
       </Box>
     </ThemeProvider>
   );

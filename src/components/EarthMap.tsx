@@ -1,19 +1,36 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { WikiArticle } from '../services/wikipediaApi';
 
-interface EarthMapProps {
-  articles: WikiArticle[];
-  onGlobeClick: (lat: number, lng: number) => void;
-  selectedArticleId: number | null;
-  onArticleClick: (id: number) => void;
-  onMouseMove?: (x: number, y: number) => void;
+export interface EarthMapRef {
+  getViewportBounds: () => { north: number, south: number, east: number, west: number } | null;
 }
 
-export default function EarthMap({ articles, onGlobeClick, selectedArticleId, onArticleClick, onMouseMove }: EarthMapProps) {
+interface EarthMapProps {
+  articles: WikiArticle[];
+  selectedArticleId: number | null;
+  onArticleClick: (id: number) => void;
+}
+
+const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    getViewportBounds: () => {
+      if (!viewerRef.current) return null;
+      const viewer = viewerRef.current;
+      const rect = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid, new Cesium.Rectangle());
+      if (!rect) return null; // 无法计算包围盒（例如看到了地平线/太空）
+      return {
+        north: Cesium.Math.toDegrees(rect.north),
+        south: Cesium.Math.toDegrees(rect.south),
+        east: Cesium.Math.toDegrees(rect.east),
+        west: Cesium.Math.toDegrees(rect.west)
+      };
+    }
+  }));
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -73,22 +90,7 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
             }
           }
         }
-
-        const earthPosition = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
-        if (Cesium.defined(earthPosition)) {
-          const cartographic = Cesium.Cartographic.fromCartesian(earthPosition!);
-          const lng = Cesium.Math.toDegrees(cartographic.longitude);
-          const lat = Cesium.Math.toDegrees(cartographic.latitude);
-          onGlobeClick(lat, lng);
-        }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-      // 鼠标移动时更新 UI 扫描圈位置（通过 React state），同时为了保持性能，我们不需要在这里触发 Cesium 重绘
-      handler.setInputAction((movement: any) => {
-        if (onMouseMove) {
-          onMouseMove(movement.endPosition.x, movement.endPosition.y);
-        }
-      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
       viewerRef.current = viewer;
     };
@@ -140,18 +142,14 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
       
       // 当数据更新时，由于启用了 requestRenderMode，需要手动触发一次渲染
       viewer.scene.requestRender();
-
-      // 自动聚焦定位：平滑飞向扫描出的所有历史标记点
-      viewer.flyTo(viewer.entities, {
-        duration: 2.0,
-        offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-45), 15000) // 保持一定的倾斜视角和高度
-      });
     }
   }, [articles, selectedArticleId]);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black" style={{ cursor: 'none' }}>
+    <div className="absolute inset-0 w-full h-full bg-black">
       <div ref={containerRef} className="w-full h-full" />
     </div>
   );
-}
+});
+
+export default EarthMap;

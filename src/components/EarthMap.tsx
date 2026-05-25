@@ -175,7 +175,7 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
             <div 
               key={a.pageid}
               ref={(el) => { markerRefs.current[a.pageid] = el; }}
-              className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none ${isSelected ? 'z-50' : 'z-10'}`}
+              className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group ${isSelected ? 'z-50' : 'z-10'}`}
             >
               {/* Marker Icon 容器（原点对齐到底部中心） */}
               <div 
@@ -185,33 +185,37 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
                   onArticleClick(a.pageid);
                 }}
               >
-                <div className={`relative transition-transform duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-100 hover:scale-110'}`}>
-                  {isSelected ? (
-                    <md-fab size="small" variant="primary" class="pointer-events-none">
-                      <MapPin className="w-5 h-5" slot="icon" />
-                    </md-fab>
-                  ) : (
-                    <md-fab size="small" variant="surface" class="pointer-events-none">
-                      <MapPin className="w-5 h-5" style={{ color: 'var(--md-sys-color-on-surface-variant)' }} slot="icon" />
-                    </md-fab>
+                <div className={`relative transition-all duration-300 flex flex-col items-center ${isSelected ? 'scale-110 -translate-y-1' : 'scale-100 group-hover:scale-110'}`}>
+                  {/* Head */}
+                  <div className={`flex items-center justify-center rounded-full shadow-sm transition-all duration-300 ${
+                    isSelected 
+                      ? 'w-10 h-10 bg-[var(--md-sys-color-primary)] shadow-md ring-4 ring-[var(--md-sys-color-primary-container)]' 
+                      : 'w-5 h-5 bg-[var(--md-sys-color-secondary-container)] border-[1.5px] border-[var(--md-sys-color-outline)] group-hover:bg-[var(--md-sys-color-primary)] group-hover:border-[var(--md-sys-color-primary)]'
+                  }`}>
+                    {isSelected ? (
+                      <MapPin className="w-5 h-5 text-[var(--md-sys-color-on-primary)]" />
+                    ) : (
+                      <div className="w-2 h-2 bg-[var(--md-sys-color-on-secondary-container)] rounded-full group-hover:bg-[var(--md-sys-color-on-primary)] transition-colors"></div>
+                    )}
+                  </div>
+                  
+                  {/* Pointy Bottom */}
+                  {isSelected && (
+                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[var(--md-sys-color-primary)] mt-0.5"></div>
                   )}
-                  {/* 底部三角形指示器 */}
-                  <div className={`absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] ${isSelected ? 'border-t-[var(--md-sys-color-primary)]' : 'border-t-[var(--md-sys-color-surface-container-highest)]'}`}></div>
                 </div>
               </div>
               
               {/* Label 容器（原点对齐到顶部中心） */}
               <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 mt-2 cursor-pointer pointer-events-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onArticleClick(a.pageid);
-                }}
+                className={`absolute top-0 left-1/2 transform -translate-x-1/2 mt-1.5 pointer-events-none transition-all duration-300 ${
+                  isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'
+                }`}
               >
-                <div className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
+                <div className={`px-2.5 py-1.5 rounded-lg text-xs font-medium relative overflow-hidden whitespace-nowrap ${
                   isSelected 
                     ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg' 
-                    : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow opacity-90 hover:opacity-100'
+                    : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow-md'
                 }`}>
                   <md-elevation level={isSelected ? 3 : 1}></md-elevation>
                   {a.title}

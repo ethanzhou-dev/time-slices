@@ -52,9 +52,26 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
 
       // 禁用耗性能的视觉特效，保证地图流畅度
       viewer.scene.globe.enableLighting = false; 
-      viewer.scene.highDynamicRange = false;
-      viewer.scene.fog.enabled = true;
-      viewer.scene.fog.density = 0.0001; // 降低雾气渲染压力
+      viewer.scene.globe.showWaterEffect = false;
+      viewer.scene.globe.depthTestAgainstTerrain = false;
+      viewer.scene.fog.enabled = false;
+      if (viewer.scene.skyBox) viewer.scene.skyBox.show = false;
+      if (viewer.scene.sun) viewer.scene.sun.show = false;
+      if (viewer.scene.moon) viewer.scene.moon.show = false;
+
+      // === 新增：3D 探照雷达圈 ===
+      const scanCircle = viewer.entities.add({
+        id: 'scan-radar-circle',
+        ellipse: {
+          semiMinorAxis: 10000.0, // 10公里半径
+          semiMajorAxis: 10000.0,
+          material: Cesium.Color.fromCssColorString('#f59e0b').withAlpha(0.15),
+          outline: true,
+          outlineColor: Cesium.Color.fromCssColorString('#f59e0b').withAlpha(0.5),
+          outlineWidth: 2,
+        },
+        show: false
+      });
 
       // 鼠标点击事件监听
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -78,6 +95,22 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
           onGlobeClick(lat, lng);
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      // === 新增：监听鼠标移动，实时更新雷达圈位置 ===
+      handler.setInputAction((movement: any) => {
+        const earthPosition = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
+        if (earthPosition) {
+          scanCircle.position = new Cesium.ConstantPositionProperty(earthPosition);
+          scanCircle.show = true;
+          // 由于开启了按需渲染，必须手动触发渲染，否则雷达圈移动时会卡顿
+          viewer.scene.requestRender();
+        } else {
+          if (scanCircle.show) {
+            scanCircle.show = false;
+            viewer.scene.requestRender();
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
       viewerRef.current = viewer;
     };

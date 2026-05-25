@@ -9,20 +9,30 @@ export interface WikiArticle {
   yearHint?: number;
 }
 
-export async function fetchNearbyHistoricalArticles(lat: number, lon: number, radius = 10000): Promise<WikiArticle[]> {
+export type SearchStatus = 'idle' | 'loading' | 'success' | 'empty' | 'too_many';
+
+export interface WikiScanResult {
+  status: SearchStatus;
+  data: WikiArticle[];
+}
+
+export async function fetchNearbyHistoricalArticles(lat: number, lon: number, radius = 10000): Promise<WikiScanResult> {
   try {
-    // Wikipedia API max radius is 10000m
     const safeRadius = Math.min(radius, 10000);
-    // 1. Fetch nearby pages from CHINESE Wikipedia
-    const geoUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${safeRadius}&gslimit=30&format=json&origin=*`;
+    const geoUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${safeRadius}&gslimit=50&format=json&origin=*`;
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
     
     if (!geoData.query || !geoData.query.geosearch || geoData.query.geosearch.length === 0) {
-      return [];
+      return { status: 'empty', data: [] };
     }
 
     const pages = geoData.query.geosearch;
+    
+    // 熔断保护：如果扫出来的结果达到 50 个，说明该区域过于密集，不予解析和显示
+    if (pages.length >= 50) {
+      return { status: 'too_many', data: [] };
+    }
     const pageIds = pages.map((p: any) => p.pageid).join('|');
 
     // 2. Fetch details (extracts and images) for these pages
@@ -67,7 +77,7 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
     }
 
     // Sort articles chronologically
-    return articles.sort((a, b) => {
+    const sorted = articles.sort((a, b) => {
       if (a.yearHint !== undefined && b.yearHint !== undefined) {
         return a.yearHint - b.yearHint;
       }
@@ -75,8 +85,10 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
       if (b.yearHint !== undefined) return 1;
       return 0;
     });
+
+    return { status: 'success', data: sorted };
   } catch (error) {
     console.error("Failed to fetch Wikipedia data:", error);
-    return [];
+    return { status: 'empty', data: [] };
   }
 }

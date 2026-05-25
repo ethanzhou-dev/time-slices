@@ -2,11 +2,11 @@ import { Card, CardContent, Typography, CircularProgress, Chip, Button, Box, Fad
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
-import type { WikiArticle } from '../services/wikipediaApi';
+import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
-  searchStatus: 'idle' | 'loading' | 'success' | 'empty';
+  searchStatus: SearchStatus;
 }
 
 export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
@@ -47,6 +47,28 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
           <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>未找到记录</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
             我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
+          </Typography>
+        </Card>
+      </Fade>
+    );
+  }
+
+  if (searchStatus === 'too_many') {
+    return (
+      <Fade in={true}>
+        <Card 
+          sx={{ 
+            position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
+            bgcolor: 'rgba(9, 9, 11, 0.85)', backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(245, 158, 11, 0.5)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 4, p: 3, textAlign: 'center'
+          }}
+        >
+          <SearchOffIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>信息过载</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+            该区域（如市中心）历史遗迹过于密集。为保证体验流畅并防止信息爆炸，系统已熔断扫描。请尝试点击非市中心的具体边缘区域。
           </Typography>
         </Card>
       </Fade>

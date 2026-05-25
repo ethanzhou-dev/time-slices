@@ -6,7 +6,7 @@ import TimelineControls from './components/TimelineControls';
 import type { TimelineNode } from './components/TimelineControls';
 import InfoPanel from './components/InfoPanel';
 import { fetchNearbyHistoricalArticles } from './services/wikipediaApi';
-import type { WikiArticle } from './services/wikipediaApi';
+import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
 // Create a dark MD3 theme
 const darkTheme = createTheme({
@@ -44,7 +44,7 @@ const darkTheme = createTheme({
 export default function App() {
   // Wikipedia integration states
   const [articles, setArticles] = useState<WikiArticle[]>([]);
-  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'success' | 'empty'>('idle');
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
 
   // Generate dynamic timeline nodes based on fetched articles that have years
@@ -73,15 +73,15 @@ export default function App() {
     setSelectedArticleId(null);
     
     // Fetch articles within a 10km radius from zh.wikipedia
-    const fetchedArticles = await fetchNearbyHistoricalArticles(lat, lng, 10000);
-    setArticles(fetchedArticles);
+    const result = await fetchNearbyHistoricalArticles(lat, lng, 10000);
     
-    if (fetchedArticles.length > 0) {
+    if (result.status === 'success' && result.data.length > 0) {
+      setArticles(result.data);
       // Auto-select the first article (which is the oldest if it has a year)
-      setSelectedArticleId(fetchedArticles[0].pageid);
+      setSelectedArticleId(result.data[0].pageid);
       setSearchStatus('success');
     } else {
-      setSearchStatus('empty');
+      setSearchStatus(result.status);
     }
   };
 

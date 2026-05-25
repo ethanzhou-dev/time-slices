@@ -9,10 +9,12 @@ export interface WikiArticle {
   yearHint?: number;
 }
 
-export async function fetchNearbyHistoricalArticles(lat: number, lon: number, radius = 20000): Promise<WikiArticle[]> {
+export async function fetchNearbyHistoricalArticles(lat: number, lon: number, radius = 10000): Promise<WikiArticle[]> {
   try {
+    // Wikipedia API max radius is 10000m
+    const safeRadius = Math.min(radius, 10000);
     // 1. Fetch nearby pages
-    const geoUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${radius}&gslimit=20&format=json&origin=*`;
+    const geoUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${safeRadius}&gslimit=20&format=json&origin=*`;
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
     

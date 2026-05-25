@@ -26,10 +26,22 @@ export default function EarthMap({ activeEra, articles, onGlobeClick, selectedAr
   // When era changes, and we have NO custom articles, fly to era center
   // If we have custom articles, we let the user control the camera
   useEffect(() => {
-    if (globeRef.current && articles.length === 0) {
-      const [lng, lat] = activeEra.center;
-      const altitude = Math.max(1.0, 3.5 - activeEra.zoom * 0.5); 
-      globeRef.current.pointOfView({ lat, lng, altitude }, 2000);
+    if (globeRef.current) {
+      // Fix blurry textures on high DPI screens
+      try {
+        const renderer = globeRef.current.renderer();
+        if (renderer) {
+          renderer.setPixelRatio(window.devicePixelRatio);
+        }
+      } catch (e) {
+        // Ignore if renderer is not accessible
+      }
+
+      if (articles.length === 0) {
+        const [lng, lat] = activeEra.center;
+        const altitude = Math.max(1.0, 3.5 - activeEra.zoom * 0.5); 
+        globeRef.current.pointOfView({ lat, lng, altitude }, 2000);
+      }
     }
   }, [activeEra, articles.length]);
 

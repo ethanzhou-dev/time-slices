@@ -2,17 +2,28 @@ import type { WikiArticle } from '../services/wikipediaApi';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
-  loading: boolean;
+  searchStatus: 'idle' | 'loading' | 'success' | 'empty';
 }
 
-export default function InfoPanel({ article, loading }: InfoPanelProps) {
-  if (loading) {
+export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
+  if (searchStatus === 'loading') {
     return (
       <div className="absolute left-6 top-24 bottom-24 w-80 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl flex items-center justify-center pointer-events-auto z-10">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-zinc-400 text-sm">Scanning historical archives...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (searchStatus === 'empty') {
+    return (
+      <div className="absolute left-6 top-24 bottom-24 w-80 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center pointer-events-auto z-10 transition-all duration-500">
+        <h3 className="text-xl font-bold text-white mb-2">No Records Found</h3>
+        <p className="text-zinc-400 text-sm text-center leading-relaxed">
+          We couldn't find any major historical records within 10km of this location. Try clicking closer to a known historical city or landmark.
+        </p>
       </div>
     );
   }

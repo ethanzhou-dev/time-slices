@@ -44,7 +44,7 @@ export default function TimelineControls({ eras, activeEraIndex, onEraChange }: 
             onClick={() => onEraChange(index)}
           >
             <div 
-              className={`w-4 h-4 rounded-full border-2 transition-all duration-300 z-10 absolute -left-1
+              className={`w-4 h-4 rounded-full border-2 transition-all duration-300 z-10 absolute left-1/2 -translate-x-1/2
                 ${index <= activeEraIndex ? 'bg-amber-500 border-black' : 'bg-zinc-700 border-zinc-900'}
                 group-hover:scale-125
               `}

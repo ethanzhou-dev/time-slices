@@ -12,25 +12,26 @@ export default function App() {
   
   // Wikipedia integration states
   const [articles, setArticles] = useState<WikiArticle[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'success' | 'empty'>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
 
   // Handle clicking on the globe
   const handleGlobeClick = async (lat: number, lng: number) => {
-    setLoading(true);
+    setSearchStatus('loading');
     setArticles([]);
     setSelectedArticleId(null);
     
-    // Fetch articles within a 20km radius
-    const fetchedArticles = await fetchNearbyHistoricalArticles(lat, lng, 20000);
+    // Fetch articles within a 10km radius
+    const fetchedArticles = await fetchNearbyHistoricalArticles(lat, lng, 10000);
     setArticles(fetchedArticles);
     
     if (fetchedArticles.length > 0) {
       // Auto-select the first article
       setSelectedArticleId(fetchedArticles[0].pageid);
+      setSearchStatus('success');
+    } else {
+      setSearchStatus('empty');
     }
-    
-    setLoading(false);
   };
 
   // Auto-select an article based on the timeline era if possible
@@ -89,7 +90,7 @@ export default function App() {
       {/* Left Info Panel */}
       <InfoPanel 
         article={selectedArticle}
-        loading={loading}
+        searchStatus={searchStatus}
       />
 
       {/* Right Timeline Controls */}
@@ -100,7 +101,7 @@ export default function App() {
       />
 
       {/* Instructions Banner */}
-      {articles.length === 0 && !loading && (
+      {searchStatus === 'idle' && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-zinc-900/80 backdrop-blur-md border border-zinc-700/50 rounded-full pointer-events-none z-10">
           <p className="text-zinc-300 text-sm font-medium animate-pulse">
             👆 Click anywhere on the globe to explore local history

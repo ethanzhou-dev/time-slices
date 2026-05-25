@@ -38,7 +38,10 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
   };
 
   return (
-    <div className="absolute right-6 top-24 bottom-24 w-28 bg-surface-container-low border border-outline-variant rounded-3xl flex flex-col items-center py-4 z-10 shadow-none animate-in fade-in duration-300">
+    <div 
+      className="absolute right-6 top-24 bottom-24 w-28 bg-surface-container-low border border-outline-variant flex flex-col items-center py-4 z-10 animate-in fade-in duration-300"
+      style={{ borderRadius: 'var(--md-sys-shape-corner-extra-large)' }}
+    >
       <md-icon-button 
         onClick={handlePrev} 
         disabled={activeIndex === 0 || undefined}

@@ -111,7 +111,7 @@ export default function App() {
       )}
 
       {/* Floating Scan Button */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <md-fab 
           variant="primary"
           label={searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}

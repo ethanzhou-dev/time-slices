@@ -51,6 +51,11 @@ declare module 'react' {
         class?: string;
         slot?: string;
       };
+      'md-elevation': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        level?: number | string;
+        class?: string;
+        slot?: string;
+      };
     }
   }
 }

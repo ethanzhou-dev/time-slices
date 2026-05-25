@@ -9,6 +9,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import '@material/web/divider/divider.js';
+import '@material/web/elevation/elevation.js';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
@@ -21,14 +22,19 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
   const [directoryOpen, setDirectoryOpen] = useState(false);
   
   const isDirectoryVisible = articles.length > 0 && !['loading', 'empty', 'too_large'].includes(searchStatus);
-  const baseCardClasses = `absolute left-6 bottom-24 w-80 bg-surface-container-low border border-outline-variant rounded-3xl overflow-hidden shadow-none z-10 transition-all duration-300 ${isDirectoryVisible ? 'top-[172px]' : 'top-24'}`;
+  const baseCardClasses = `absolute left-6 bottom-24 w-80 bg-surface-container-low border border-outline-variant overflow-hidden z-10 transition-all duration-300 ${isDirectoryVisible ? 'top-[172px]' : 'top-24'}`;
+  const cardStyle = { borderRadius: 'var(--md-sys-shape-corner-extra-large)' };
 
   const renderDirectoryPanel = () => {
     if (!isDirectoryVisible) return null;
     return (
-      <div className="absolute left-6 top-24 w-80 bg-surface-container-low border border-outline-variant rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-20 flex flex-col overflow-hidden animate-in fade-in duration-300">
+      <div 
+        className="absolute left-6 top-24 w-80 bg-surface-container-low border border-outline-variant z-20 flex flex-col overflow-hidden animate-in fade-in duration-300"
+        style={cardStyle}
+      >
+        <md-elevation level="3"></md-elevation>
         <button 
-          className="w-full flex items-center justify-between p-4 bg-transparent border-none cursor-pointer hover:bg-surface-variant/30 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-transparent border-none cursor-pointer hover:bg-surface-variant/30 transition-colors z-10"
           onClick={() => setDirectoryOpen(!directoryOpen)}
         >
           <div className="flex items-center gap-2 text-on-surface">
@@ -41,7 +47,7 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
         </button>
         
         <div 
-          className="transition-all duration-300 ease-in-out bg-surface-container-lowest"
+          className="transition-all duration-300 ease-in-out bg-surface-container-lowest z-10"
           style={{ maxHeight: directoryOpen ? '400px' : '0' }}
         >
           <div className="overflow-y-auto border-t border-outline-variant" style={{ maxHeight: '400px' }}>
@@ -77,8 +83,8 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
   const renderContent = () => {
     if (searchStatus === 'loading') {
       return (
-        <div className={`${baseCardClasses} flex items-center justify-center animate-in fade-in duration-300`}>
-          <div className="flex flex-col items-center gap-4">
+        <div className={`${baseCardClasses} flex items-center justify-center animate-in fade-in duration-300`} style={cardStyle}>
+          <div className="flex flex-col items-center gap-4 z-10">
             <md-circular-progress indeterminate></md-circular-progress>
             <span className="text-sm text-on-surface-variant">正在扫描历史档案...</span>
           </div>
@@ -88,44 +94,50 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
 
     if (searchStatus === 'empty') {
       return (
-        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300`}>
-          <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
-          <h6 className="text-xl font-bold mb-2">未找到记录</h6>
-          <p className="text-sm leading-relaxed text-on-surface-variant">
-            我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
-          </p>
+        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300`} style={cardStyle}>
+          <div className="z-10 flex flex-col items-center">
+            <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
+            <h6 className="text-xl font-bold mb-2">未找到记录</h6>
+            <p className="text-sm leading-relaxed text-on-surface-variant">
+              我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
+            </p>
+          </div>
         </div>
       );
     }
 
     if (searchStatus === 'too_large') {
       return (
-        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center border-error animate-in fade-in duration-300`}>
-          <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
-          <h6 className="text-xl font-bold mb-2 text-primary">视野过大</h6>
-          <p className="text-sm leading-relaxed text-on-surface-variant">
-            当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
-          </p>
+        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center border-error animate-in fade-in duration-300`} style={cardStyle}>
+          <div className="z-10 flex flex-col items-center">
+            <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
+            <h6 className="text-xl font-bold mb-2 text-primary">视野过大</h6>
+            <p className="text-sm leading-relaxed text-on-surface-variant">
+              当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
+            </p>
+          </div>
         </div>
       );
     }
 
     if (!article) {
       return (
-        <div className={`${baseCardClasses} flex flex-col justify-center p-8 animate-in fade-in duration-300`}>
-          <md-icon style={{ fontSize: 40, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 40, height: 40 }}>travel_explore</md-icon>
-          <h5 className="text-2xl font-bold mb-2">探索世界</h5>
-          <p className="text-sm leading-relaxed text-on-surface-variant">
-            移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
-          </p>
+        <div className={`${baseCardClasses} flex flex-col justify-center p-8 animate-in fade-in duration-300`} style={cardStyle}>
+          <div className="z-10 flex flex-col">
+            <md-icon style={{ fontSize: 40, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 40, height: 40 }}>travel_explore</md-icon>
+            <h5 className="text-2xl font-bold mb-2">探索世界</h5>
+            <p className="text-sm leading-relaxed text-on-surface-variant">
+              移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
+            </p>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className={`${baseCardClasses} flex flex-col animate-in fade-in duration-300`}>
+      <div className={`${baseCardClasses} flex flex-col animate-in fade-in duration-300`} style={cardStyle}>
         {article.thumbnail && (
-          <div className="relative w-full h-48 shrink-0">
+          <div className="relative w-full h-48 shrink-0 z-10">
             <img
               src={article.thumbnail}
               alt={article.title}
@@ -135,7 +147,7 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
           </div>
         )}
         
-        <div className="flex-grow overflow-y-auto p-0 flex flex-col">
+        <div className="flex-grow overflow-y-auto p-0 flex flex-col z-10">
           <div className="p-6 pb-2">
             <div className="flex items-center gap-3 mb-4">
               <md-assist-chip 

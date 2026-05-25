@@ -1,105 +1,84 @@
-import { useEffect, useRef, useState } from 'react';
-import Map, { Source, Layer } from 'react-map-gl/mapbox';
-import type { MapRef } from 'react-map-gl/mapbox';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import Globe from 'react-globe.gl';
+import type { GlobeMethods } from 'react-globe.gl';
 import type { HistoricalEra } from '../data/historicalData';
 
 interface EarthMapProps {
   activeEra: HistoricalEra;
-  mapboxToken: string;
 }
 
-export default function EarthMap({ activeEra, mapboxToken }: EarthMapProps) {
-  const mapRef = useRef<MapRef>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+export default function EarthMap({ activeEra }: EarthMapProps) {
+  const globeRef = useRef<GlobeMethods | undefined>(undefined);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
+  // Handle window resize
   useEffect(() => {
-    if (mapLoaded && mapRef.current) {
-      mapRef.current.flyTo({
-        center: activeEra.center,
-        zoom: activeEra.zoom,
-        duration: 3000,
-        essential: true,
-      });
-    }
-  }, [activeEra, mapLoaded]);
+    const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  // We are using a generic style. If users have a specific mapbox studio style they can swap it.
+  // When era changes, rotate camera to the center coordinate
+  useEffect(() => {
+    if (globeRef.current) {
+      const [lng, lat] = activeEra.center;
+      // Adjust the altitude depending on zoom level (lower zoom = higher altitude)
+      // Mapbox zoom 2-4 roughly translates to altitude 1.5 to 2.5 in globe.gl
+      const altitude = Math.max(1.0, 3.5 - activeEra.zoom * 0.5); 
+      
+      globeRef.current.pointOfView({ lat, lng, altitude }, 2000);
+    }
+  }, [activeEra]);
+
+  // Extract points from GeoJSON for Globe.gl
+  const pointsData = useMemo(() => {
+    return activeEra.places.features.map((f: any) => ({
+      lat: f.geometry.coordinates[1],
+      lng: f.geometry.coordinates[0],
+      size: f.properties.type === 'capital' ? 0.15 : 0.08,
+      color: f.properties.type === 'capital' ? '#fbbf24' : '#fef3c7',
+      name: f.properties.name
+    }));
+  }, [activeEra]);
+
   return (
     <div className="absolute inset-0 w-full h-full bg-black">
-      <Map
-        ref={mapRef}
-        mapboxAccessToken={mapboxToken}
-        initialViewState={{
-          longitude: activeEra.center[0],
-          latitude: activeEra.center[1],
-          zoom: activeEra.zoom,
-          pitch: 45, // Add a bit of pitch for the 3D globe effect
+      <Globe
+        ref={globeRef as any}
+        width={dimensions.width}
+        height={dimensions.height}
+        
+        // Use free high-res textures from unpkg
+        globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+        bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+        backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+        
+        // Atmosphere settings for realism
+        atmosphereColor="#3a228a"
+        atmosphereAltitude={0.15}
+        
+        // Points config (our historical places)
+        pointsData={pointsData}
+        pointLat="lat"
+        pointLng="lng"
+        pointColor="color"
+        pointAltitude={0.02}
+        pointRadius="size"
+        pointsMerge={false}
+        
+        // Custom HTML labels above points
+        htmlElementsData={pointsData}
+        htmlElement={(d: any) => {
+          const el = document.createElement('div');
+          el.innerHTML = `
+            <div style="color: white; font-weight: bold; font-size: 14px; text-shadow: 0px 0px 4px black, 0px 0px 8px black; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; pointer-events: none;">
+              ${d.name}
+            </div>
+          `;
+          return el;
         }}
-        mapStyle="mapbox://styles/mapbox/satellite-v9"
-        projection={{ name: 'globe' }} // This enables the 3D globe
-        onLoad={() => setMapLoaded(true)}
-        fog={{
-          range: [0.8, 8],
-          color: '#242B4B',
-          'horizon-blend': 0.3,
-          'high-color': '#161B36',
-          'space-color': '#0B0D17',
-          'star-intensity': 0.8 // Adds stars to the background
-        }}
-        terrain={{ source: 'mapbox-dem', exaggeration: 1.5 }}
-      >
-        {/* Add terrain source */}
-        <Source
-          id="mapbox-dem"
-          type="raster-dem"
-          url="mapbox://mapbox.mapbox-terrain-dem-v1"
-          tileSize={512}
-          maxzoom={14}
-        />
-
-        {/* Current Era Data Points */}
-        <Source id={`places-${activeEra.id}`} type="geojson" data={activeEra.places}>
-          {/* Outer glow for points */}
-          <Layer
-            id="places-glow"
-            type="circle"
-            paint={{
-              'circle-radius': 12,
-              'circle-color': '#fbbf24', // amber-400
-              'circle-opacity': 0.4,
-              'circle-blur': 0.5,
-            }}
-          />
-          {/* Inner point */}
-          <Layer
-            id="places-point"
-            type="circle"
-            paint={{
-              'circle-radius': 6,
-              'circle-color': '#fef3c7', // amber-50
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#fbbf24',
-            }}
-          />
-          {/* Labels */}
-          <Layer
-            id="places-label"
-            type="symbol"
-            layout={{
-              'text-field': ['get', 'name'],
-              'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-              'text-size': 14,
-              'text-offset': [0, 1.5],
-              'text-anchor': 'top',
-            }}
-            paint={{
-              'text-color': '#ffffff',
-              'text-halo-color': '#000000',
-              'text-halo-width': 2,
-            }}
-          />
-        </Source>
-      </Map>
+        htmlAltitude={0.05}
+      />
     </div>
   );
 }

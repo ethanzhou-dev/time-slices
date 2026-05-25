@@ -7,7 +7,7 @@ import InfoPanel from './components/InfoPanel';
 import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
-import '@material/web/button/elevated-button.js';
+import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
 
 export default function App() {
@@ -112,13 +112,15 @@ export default function App() {
 
       {/* Floating Scan Button */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
-        <md-elevated-button 
+        <md-fab 
+          variant="primary"
+          style={{ '--md-fab-label-text-tracking': '0.1px' } as any}
+          label={searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
           onClick={handleScanViewport}
           disabled={searchStatus === 'loading' || undefined}
         >
           <md-icon slot="icon">search</md-icon>
-          {searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
-        </md-elevated-button>
+        </md-fab>
       </div>
 
     </div>

@@ -47,12 +47,12 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
         <md-icon>keyboard_arrow_up</md-icon>
       </md-icon-button>
 
-      <div className="flex-1 w-full relative flex flex-col overflow-y-auto no-scrollbar py-4" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-        {/* Vertical Track Line */}
-        <div className="absolute left-[calc(100%-20px)] top-4 bottom-4 w-1 -translate-x-1/2 bg-surface-variant rounded-full"></div>
+      <div className="flex-1 w-full relative flex flex-col overflow-y-auto no-scrollbar" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
         
         {/* Nodes */}
-        <div ref={containerRef} className="flex flex-col gap-6 w-full relative z-10">
+        <div ref={containerRef} className="flex flex-col gap-6 w-full relative z-10 py-4">
+          {/* Vertical Track Line */}
+          <div className="absolute right-[20px] top-4 bottom-4 w-1 translate-x-1/2 bg-surface-variant rounded-full -z-10"></div>
           {nodes.map((node, index) => {
             const isActive = index === activeIndex;
             return (

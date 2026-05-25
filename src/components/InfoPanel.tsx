@@ -1,16 +1,24 @@
+import { useState } from 'react';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
 
 import '@material/web/progress/circular-progress.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/button/text-button.js';
 import '@material/web/chips/assist-chip.js';
 import '@material/web/icon/icon.js';
+import '@material/web/list/list.js';
+import '@material/web/list/list-item.js';
+import '@material/web/divider/divider.js';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
+  articles?: WikiArticle[];
+  onArticleClick?: (id: number) => void;
   searchStatus: SearchStatus;
 }
 
-export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
+export default function InfoPanel({ article, articles = [], onArticleClick, searchStatus }: InfoPanelProps) {
+  const [directoryOpen, setDirectoryOpen] = useState(false);
   const baseCardClasses = "absolute left-6 top-24 bottom-24 w-80 bg-surface-container-low border border-outline-variant rounded-3xl overflow-hidden shadow-none";
 
   if (searchStatus === 'loading') {
@@ -73,33 +81,80 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         </div>
       )}
       
-      <div className="flex-grow overflow-y-auto p-6 flex flex-col">
-        <div className="flex items-center gap-3 mb-4">
-          <md-assist-chip 
-            label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
-          />
-          <span className="text-xs font-mono text-on-surface-variant">
-            距离 {(article.distance / 1000).toFixed(1)} km
-          </span>
-        </div>
-        
-        <h5 className="text-2xl font-bold mb-2 text-on-surface">
-          {article.title}
-        </h5>
-        
-        <p className="text-sm leading-relaxed mb-6 text-on-surface-variant">
-          {article.extract}
-        </p>
+      <div className="flex-grow overflow-y-auto p-0 flex flex-col">
+        <div className="p-6 pb-2">
+          <div className="flex items-center gap-3 mb-4">
+            <md-assist-chip 
+              label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
+            />
+            <span className="text-xs font-mono text-on-surface-variant">
+              距离 {(article.distance / 1000).toFixed(1)} km
+            </span>
+          </div>
+          
+          <h5 className="text-2xl font-bold mb-2 text-on-surface">
+            {article.title}
+          </h5>
+          
+          <p className="text-sm leading-relaxed mb-6 text-on-surface-variant">
+            {article.extract}
+          </p>
 
-        <div className="mt-auto pt-4">
           <md-filled-button 
             onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
-            style={{ width: '100%' }}
+            style={{ width: '100%', marginBottom: '16px' }}
           >
             <md-icon slot="icon">auto_stories</md-icon>
             在维基百科上阅读全文
           </md-filled-button>
         </div>
+
+        {articles.length > 0 && (
+          <div className="mt-auto border-t border-outline-variant">
+            <button 
+              className="w-full flex items-center justify-between p-4 bg-transparent border-none cursor-pointer hover:bg-surface-variant/30 transition-colors"
+              onClick={() => setDirectoryOpen(!directoryOpen)}
+            >
+              <div className="flex items-center gap-2 text-on-surface">
+                <md-icon>format_list_bulleted</md-icon>
+                <span className="font-bold text-sm">扫描结果目录 ({articles.length})</span>
+              </div>
+              <md-icon className="text-on-surface-variant transition-transform duration-300" style={{ transform: directoryOpen ? 'rotate(180deg)' : 'none' }}>
+                expand_more
+              </md-icon>
+            </button>
+            
+            <div 
+              className={`overflow-hidden transition-all duration-300 ease-in-out bg-surface-container-lowest`}
+              style={{ maxHeight: directoryOpen ? '300px' : '0' }}
+            >
+              <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
+                <md-list>
+                  {articles.map((a) => (
+                    <md-list-item 
+                      key={a.pageid}
+                      type="button"
+                      onClick={() => {
+                        if (onArticleClick) onArticleClick(a.pageid);
+                      }}
+                      className={a.pageid === article.pageid ? 'bg-primary/10' : ''}
+                    >
+                      <div slot="headline" className={a.pageid === article.pageid ? 'text-primary font-bold' : ''}>
+                        {a.title}
+                      </div>
+                      <div slot="supporting-text" className="text-xs">
+                        {a.yearHint ? (a.yearHint < 0 ? `公元前${Math.abs(a.yearHint)}年` : `${a.yearHint}年`) : '未知年份'} · {(a.distance / 1000).toFixed(1)}km
+                      </div>
+                      <md-icon slot="end" style={{ opacity: a.pageid === article.pageid ? 1 : 0, color: 'var(--md-sys-color-primary)' }}>
+                        check
+                      </md-icon>
+                    </md-list-item>
+                  ))}
+                </md-list>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

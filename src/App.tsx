@@ -96,6 +96,8 @@ export default function App() {
       {/* Left Info Panel */}
       <InfoPanel 
         article={selectedArticle}
+        articles={articles}
+        onArticleClick={setSelectedArticleId}
         searchStatus={searchStatus}
       />
 

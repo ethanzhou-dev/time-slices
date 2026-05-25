@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { ThemeProvider, createTheme, CssBaseline, Box, Typography, Avatar, Button } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box, Typography, Avatar, Fab } from '@mui/material';
 import PublicIcon from '@mui/icons-material/Public';
 import SearchIcon from '@mui/icons-material/Search';
 import EarthMap from './components/EarthMap';
@@ -9,39 +9,7 @@ import type { TimelineNode } from './components/TimelineControls';
 import InfoPanel from './components/InfoPanel';
 import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
-
-// Create a dark MD3 theme
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#f59e0b', // Amber 500
-    },
-    background: {
-      default: '#000000',
-      paper: '#09090b',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none', // Remove default MUI overlay
-        }
-      }
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-        }
-      }
-    }
-  }
-});
+import { md3Theme } from './theme';
 
 export default function App() {
   // Wikipedia integration states
@@ -104,7 +72,7 @@ export default function App() {
   const selectedArticle = articles.find(a => a.pageid === selectedArticleId) || null;
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={md3Theme}>
       <CssBaseline />
       <Box sx={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
         
@@ -160,29 +128,23 @@ export default function App() {
           transform: 'translateX(-50%)',
           zIndex: 10,
         }}>
-          <Button
-            variant="contained"
+          <Fab
+            variant="extended"
             color="primary"
-            size="large"
-            startIcon={<SearchIcon />}
             onClick={handleScanViewport}
             disabled={searchStatus === 'loading'}
             sx={{
-              borderRadius: 8,
               px: 4,
-              py: 1.5,
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              boxShadow: '0 4px 20px rgba(245,158,11,0.4)',
+              py: 2,
               transition: 'transform 0.2s',
               '&:hover': {
                 transform: 'scale(1.05)',
-                boxShadow: '0 6px 25px rgba(245,158,11,0.6)',
               }
             }}
           >
+            <SearchIcon sx={{ mr: 1 }} />
             {searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
-          </Button>
+          </Fab>
         </Box>
 
       </Box>

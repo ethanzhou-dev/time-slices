@@ -50,12 +50,10 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
   return (
     <Fade in={true}>
       <Paper 
-        elevation={24}
+        elevation={2}
         sx={{
           position: 'absolute', right: 24, top: 96, bottom: 96, width: 80,
-          bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 8, display: 'flex', flexDirection: 'column',
+          display: 'flex', flexDirection: 'column',
           alignItems: 'center', py: 2, zIndex: 10
         }}
       >

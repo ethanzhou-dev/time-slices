@@ -16,10 +16,7 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         <Card 
           sx={{ 
             position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 4
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
@@ -37,10 +34,8 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         <Card 
           sx={{ 
             position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 4, p: 3, textAlign: 'center'
+            p: 3, textAlign: 'center'
           }}
         >
           <SearchOffIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
@@ -59,10 +54,9 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         <Card 
           sx={{ 
             position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            bgcolor: 'rgba(9, 9, 11, 0.85)', backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(245, 158, 11, 0.5)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 4, p: 3, textAlign: 'center'
+            p: 3, textAlign: 'center',
+            border: (theme) => `1px solid ${theme.palette.error.main}`
           }}
         >
           <SearchOffIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
@@ -81,10 +75,8 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         <Card 
           sx={{ 
             position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            borderRadius: 4, p: 4
+            p: 4
           }}
         >
           <TravelExploreIcon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
@@ -102,10 +94,8 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
       <Card 
         sx={{ 
           position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-          bgcolor: 'rgba(9, 9, 11, 0.7)', backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex', flexDirection: 'column',
-          borderRadius: 4, overflow: 'hidden'
+          overflow: 'hidden'
         }}
       >
         {article.thumbnail && (

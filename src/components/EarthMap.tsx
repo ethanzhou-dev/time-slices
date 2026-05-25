@@ -1,6 +1,9 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
+import { MapPin } from 'lucide-react';
+import '@material/web/fab/fab.js';
+import '@material/web/elevation/elevation.js';
 import type { WikiArticle } from '../services/wikipediaApi';
 
 export interface EarthMapRef {
@@ -16,6 +19,7 @@ interface EarthMapProps {
 const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
+  const [markerPositions, setMarkerPositions] = useState<Record<number, { x: number, y: number, show: boolean }>>({});
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -105,49 +109,102 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     };
   }, []);
 
-  // 动态渲染历史事件标记点
+  // 动态更新 HTML 标记点位置
   useEffect(() => {
     if (!viewerRef.current) return;
     const viewer = viewerRef.current;
 
+    // 清除旧的实体
     viewer.entities.removeAll();
 
-    if (articles.length > 0) {
+    const updatePositions = () => {
+      const newPositions: Record<number, { x: number, y: number, show: boolean }> = {};
+      
       articles.forEach(a => {
-        const isSelected = selectedArticleId === a.pageid;
+        const position = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
         
-        viewer.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(a.lon, a.lat),
-          name: a.pageid.toString(),
-          point: {
-            pixelSize: isSelected ? 12 : 8,
-            color: isSelected ? Cesium.Color.RED : Cesium.Color.ORANGE,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-          },
-          label: {
-            text: a.title,
-            font: isSelected ? 'bold 16px sans-serif' : '12px sans-serif',
-            fillColor: isSelected ? Cesium.Color.RED : Cesium.Color.WHITE,
-            outlineColor: Cesium.Color.BLACK,
-            outlineWidth: 4,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -15),
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        // 检查点是否在地球背面（地平线剔除）
+        const occluder = new Cesium.EllipsoidalOccluder(viewer.scene.globe.ellipsoid, viewer.camera.position);
+        const isVisible = occluder.isPointVisible(position);
+
+        if (isVisible) {
+          const screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
+          if (screenPosition) {
+            newPositions[a.pageid] = { x: screenPosition.x, y: screenPosition.y, show: true };
+          } else {
+            newPositions[a.pageid] = { x: 0, y: 0, show: false };
           }
-        });
+        } else {
+          newPositions[a.pageid] = { x: 0, y: 0, show: false };
+        }
       });
       
-      // 当数据更新时，由于启用了 requestRenderMode，需要手动触发一次渲染
-      viewer.scene.requestRender();
-    }
-  }, [articles, selectedArticleId]);
+      setMarkerPositions(newPositions);
+    };
+
+    // 监听渲染前事件，实时计算屏幕坐标
+    viewer.scene.preRender.addEventListener(updatePositions);
+    
+    // 初始化时执行一次
+    updatePositions();
+    // 强制触发一次渲染以更新坐标
+    viewer.scene.requestRender();
+
+    return () => {
+      viewer.scene.preRender.removeEventListener(updatePositions);
+    };
+  }, [articles]);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black">
+    <div className="absolute inset-0 w-full h-full bg-black overflow-hidden relative">
       <div ref={containerRef} className="w-full h-full" />
+      
+      {/* HTML Markers Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {articles.map(a => {
+          const pos = markerPositions[a.pageid];
+          if (!pos || !pos.show) return null;
+          
+          const isSelected = selectedArticleId === a.pageid;
+          
+          return (
+            <div 
+              key={a.pageid}
+              className={`absolute pointer-events-auto flex flex-col items-center transform -translate-x-1/2 -translate-y-[100%] transition-transform duration-75 cursor-pointer ${isSelected ? 'z-50' : 'z-10'}`}
+              style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onArticleClick(a.pageid);
+              }}
+            >
+              {/* MD3 Marker */}
+              <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-100 hover:scale-110'}`}>
+                {isSelected ? (
+                  <md-fab size="small" variant="primary" class="pointer-events-none">
+                    <MapPin className="w-5 h-5" slot="icon" />
+                  </md-fab>
+                ) : (
+                  <md-fab size="small" variant="surface" class="pointer-events-none">
+                    <MapPin className="w-5 h-5" style={{ color: 'var(--md-sys-color-on-surface-variant)' }} slot="icon" />
+                  </md-fab>
+                )}
+                {/* 底部三角形指示器 (模仿地图图钉) */}
+                <div className={`absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] ${isSelected ? 'border-t-[var(--md-sys-color-primary)]' : 'border-t-[var(--md-sys-color-surface-container-highest)]'}`}></div>
+              </div>
+              
+              {/* Label */}
+              <div className={`mt-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
+                isSelected 
+                  ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg' 
+                  : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] shadow opacity-90 hover:opacity-100'
+              }`}>
+                <md-elevation level={isSelected ? 3 : 1}></md-elevation>
+                {a.title}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 });

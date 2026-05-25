@@ -41,14 +41,14 @@ export default function EarthMap({ articles, onGlobeClick, selectedArticleId, on
       // 移除左下角 Logo 保持画面整洁
       viewer.cesiumWidget.creditContainer.setAttribute('style', 'display: none;');
 
-      // 核心替换：使用单图层的 Google Maps Hybrid 瓦片（完美融合超清卫星图 + 极高精度街道网 + 中文地名）
-      // 这比之前加载三个 ArcGIS 图层要快 3 倍，且拥有“真·谷歌地球”级别的详尽路网
-      const googleHybridProvider = new Cesium.UrlTemplateImageryProvider({
-        url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+      // 核心替换：使用 CartoDB Dark Matter 图层（深色极简风格，含极高精度 OSM 道路网和地名，完美解决 GCJ-02 偏移问题）
+      const cartoDarkProvider = new Cesium.UrlTemplateImageryProvider({
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        subdomains: ['a', 'b', 'c', 'd'],
         maximumLevel: 20
       });
       
-      viewer.imageryLayers.addImageryProvider(googleHybridProvider);
+      viewer.imageryLayers.addImageryProvider(cartoDarkProvider);
 
       // 禁用耗性能的视觉特效，保证地图流畅度
       viewer.scene.globe.enableLighting = false; 

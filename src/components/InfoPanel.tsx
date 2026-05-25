@@ -1,8 +1,9 @@
-import { Card, CardContent, Typography, CircularProgress, Chip, Button, Box, Fade } from '@mui/material';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import TravelExploreIcon from '@mui/icons-material/TravelExplore';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
+
+import '@material/web/progress/circular-progress.js';
+import '@material/web/button/filled-button.js';
+import '@material/web/chips/assist-chip.js';
+import '@material/web/icon/icon.js';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
@@ -10,143 +11,96 @@ interface InfoPanelProps {
 }
 
 export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
+  const baseCardClasses = "absolute left-6 top-24 bottom-24 w-80 bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] rounded-3xl overflow-hidden shadow-none";
+
   if (searchStatus === 'loading') {
     return (
-      <Fade in={true}>
-        <Card 
-          sx={{ 
-            position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <CircularProgress color="primary" />
-            <Typography variant="body2" color="text.secondary">正在扫描历史档案...</Typography>
-          </Box>
-        </Card>
-      </Fade>
+      <div className={`${baseCardClasses} flex items-center justify-center animate-in fade-in duration-300`}>
+        <div className="flex flex-col items-center gap-4">
+          <md-circular-progress indeterminate></md-circular-progress>
+          <span className="text-sm text-[var(--md-sys-color-on-surface-variant)]">正在扫描历史档案...</span>
+        </div>
+      </div>
     );
   }
 
   if (searchStatus === 'empty') {
     return (
-      <Fade in={true}>
-        <Card 
-          sx={{ 
-            position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            p: 3, textAlign: 'center'
-          }}
-        >
-          <SearchOffIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>未找到记录</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
-          </Typography>
-        </Card>
-      </Fade>
+      <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300`}>
+        <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
+        <h6 className="text-xl font-bold mb-2">未找到记录</h6>
+        <p className="text-sm leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
+          我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
+        </p>
+      </div>
     );
   }
 
   if (searchStatus === 'too_large') {
     return (
-      <Fade in={true}>
-        <Card 
-          sx={{ 
-            position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            p: 3, textAlign: 'center',
-            border: (theme) => `1px solid ${theme.palette.error.main}`
-          }}
-        >
-          <SearchOffIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>视野过大</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
-          </Typography>
-        </Card>
-      </Fade>
+      <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center border-[var(--md-sys-color-error)] animate-in fade-in duration-300`}>
+        <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
+        <h6 className="text-xl font-bold mb-2 text-[var(--md-sys-color-primary)]">视野过大</h6>
+        <p className="text-sm leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
+          当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
+        </p>
+      </div>
     );
   }
 
   if (!article) {
     return (
-      <Fade in={true}>
-        <Card 
-          sx={{ 
-            position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            p: 4
-          }}
-        >
-          <TravelExploreIcon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>探索世界</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
-          </Typography>
-        </Card>
-      </Fade>
+      <div className={`${baseCardClasses} flex flex-col justify-center p-8 animate-in fade-in duration-300`}>
+        <md-icon style={{ fontSize: 40, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 40, height: 40 }}>travel_explore</md-icon>
+        <h5 className="text-2xl font-bold mb-2">探索世界</h5>
+        <p className="text-sm leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
+          移动和缩很容易缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
+        </p>
+      </div>
     );
   }
 
   return (
-    <Fade in={true}>
-      <Card 
-        sx={{ 
-          position: 'absolute', left: 24, top: 96, bottom: 96, width: 320, 
-          display: 'flex', flexDirection: 'column',
-          overflow: 'hidden'
-        }}
-      >
-        {article.thumbnail && (
-          <Box sx={{ position: 'relative', width: '100%', height: 200 }}>
-            <Box 
-              component="img"
-              src={article.thumbnail}
-              alt={article.title}
-              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-            <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(9, 9, 11, 1))' }} />
-          </Box>
-        )}
+    <div className={`${baseCardClasses} flex flex-col animate-in fade-in duration-300`}>
+      {article.thumbnail && (
+        <div className="relative w-full h-48">
+          <img
+            src={article.thumbnail}
+            alt={article.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--md-sys-color-surface-container-low)]" />
+        </div>
+      )}
+      
+      <div className="flex-grow overflow-y-auto p-6 flex flex-col">
+        <div className="flex items-center gap-3 mb-4">
+          <md-assist-chip 
+            label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
+          />
+          <span className="text-xs font-mono text-[var(--md-sys-color-on-surface-variant)]">
+            距离 {(article.distance / 1000).toFixed(1)} km
+          </span>
+        </div>
         
-        <CardContent sx={{ flexGrow: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-            <Chip 
-              label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
-              color="primary" 
-              variant="outlined"
-              size="small"
-              sx={{ fontWeight: 'bold' }}
-            />
-            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-              距离 {(article.distance / 1000).toFixed(1)} km
-            </Typography>
-          </Box>
-          
-          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-            {article.title}
-          </Typography>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8, mb: 3 }}>
-            {article.extract}
-          </Typography>
+        <h5 className="text-2xl font-bold mb-2 text-[var(--md-sys-color-on-surface)]">
+          {article.title}
+        </h5>
+        
+        <p className="text-sm leading-relaxed mb-6 text-[var(--md-sys-color-on-surface-variant)]">
+          {article.extract}
+        </p>
 
-          <Box sx={{ mt: 'auto' }}>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              startIcon={<AutoStoriesIcon />}
-              href={`https://zh.wikipedia.org/?curid=${article.pageid}`}
-              target="_blank"
-              fullWidth
-              sx={{ borderRadius: 2 }}
-            >
-              在维基百科上阅读全文
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-    </Fade>
+        <div className="mt-auto">
+          <md-filled-button 
+            onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
+            style={{ width: '100%' }}
+          >
+            <md-icon slot="icon">auto_stories</md-icon>
+            在维基百科上阅读全文
+          </md-filled-button>
+        </div>
+      </div>
+    </div>
   );
 }

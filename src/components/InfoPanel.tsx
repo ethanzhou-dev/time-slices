@@ -11,7 +11,7 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
       <div className="absolute left-6 top-24 bottom-24 w-80 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl flex items-center justify-center pointer-events-auto z-10">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-zinc-400 text-sm">Scanning historical archives...</p>
+          <p className="text-zinc-400 text-sm">正在扫描历史档案...</p>
         </div>
       </div>
     );
@@ -20,9 +20,9 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
   if (searchStatus === 'empty') {
     return (
       <div className="absolute left-6 top-24 bottom-24 w-80 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center pointer-events-auto z-10 transition-all duration-500">
-        <h3 className="text-xl font-bold text-white mb-2">No Records Found</h3>
+        <h3 className="text-xl font-bold text-white mb-2">未找到记录</h3>
         <p className="text-zinc-400 text-sm text-center leading-relaxed">
-          We couldn't find any major historical records within 10km of this location. Try clicking closer to a known historical city or landmark.
+          我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
         </p>
       </div>
     );
@@ -31,9 +31,9 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
   if (!article) {
     return (
       <div className="absolute left-6 top-24 bottom-24 w-80 bg-zinc-950/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl flex flex-col justify-center pointer-events-auto z-10 transition-all duration-500">
-        <h3 className="text-xl font-bold text-white mb-2">Explore the World</h3>
+        <h3 className="text-xl font-bold text-white mb-2">探索世界</h3>
         <p className="text-zinc-400 text-sm leading-relaxed">
-          Click anywhere on the globe to discover historical events, ancient ruins, and significant locations nearby. Drag the timeline to filter by era.
+          点击地球上的任意位置，发现附近的历史事件、古代遗址和重要地点。拖动时间轴可按时代筛选。
         </p>
       </div>
     );
@@ -51,10 +51,10 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
       <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
         <div className="flex items-center gap-3 mb-3">
           <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-semibold tracking-wider">
-            {article.yearHint ? `Circa ${article.yearHint}` : 'Historical Site'}
+            {article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'}
           </span>
           <span className="text-xs font-mono text-zinc-500">
-            {(article.distance / 1000).toFixed(1)} km away
+            距离 {(article.distance / 1000).toFixed(1)} km
           </span>
         </div>
         
@@ -67,12 +67,12 @@ export default function InfoPanel({ article, searchStatus }: InfoPanelProps) {
         </p>
 
         <a 
-          href={`https://en.wikipedia.org/?curid=${article.pageid}`} 
+          href={`https://zh.wikipedia.org/?curid=${article.pageid}`} 
           target="_blank" 
           rel="noreferrer"
           className="inline-block mt-6 text-amber-400 text-sm hover:text-amber-300 hover:underline transition-colors"
         >
-          Read full article on Wikipedia &rarr;
+          在维基百科上阅读全文 &rarr;
         </a>
       </div>
     </div>

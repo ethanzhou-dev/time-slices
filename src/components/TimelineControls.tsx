@@ -1,19 +1,26 @@
-import type { HistoricalEra } from '../data/historicalData';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-interface TimelineControlsProps {
-  eras: HistoricalEra[];
-  activeEraIndex: number;
-  onEraChange: (index: number) => void;
+export interface TimelineNode {
+  id: number;
+  label: string;
+  articleId: number;
 }
 
-export default function TimelineControls({ eras, activeEraIndex, onEraChange }: TimelineControlsProps) {
+interface TimelineControlsProps {
+  nodes: TimelineNode[];
+  activeIndex: number;
+  onNodeChange: (index: number) => void;
+}
+
+export default function TimelineControls({ nodes, activeIndex, onNodeChange }: TimelineControlsProps) {
+  if (nodes.length === 0) return null;
+
   const handlePrev = () => {
-    if (activeEraIndex > 0) onEraChange(activeEraIndex - 1);
+    if (activeIndex > 0) onNodeChange(activeIndex - 1);
   };
 
   const handleNext = () => {
-    if (activeEraIndex < eras.length - 1) onEraChange(activeEraIndex + 1);
+    if (activeIndex < nodes.length - 1) onNodeChange(activeIndex + 1);
   };
 
   return (
@@ -21,7 +28,7 @@ export default function TimelineControls({ eras, activeEraIndex, onEraChange }: 
       
       <button 
         onClick={handlePrev}
-        disabled={activeEraIndex === 0}
+        disabled={activeIndex === 0}
         className="p-2 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronUp size={20} />
@@ -32,26 +39,26 @@ export default function TimelineControls({ eras, activeEraIndex, onEraChange }: 
         {/* Active progress bar */}
         <div 
           className="absolute top-0 w-full bg-amber-500 rounded-full transition-all duration-700 ease-out"
-          style={{ height: `${(activeEraIndex / (eras.length - 1)) * 100}%` }}
+          style={{ height: nodes.length > 1 ? `${(activeIndex / (nodes.length - 1)) * 100}%` : '100%' }}
         />
 
         {/* Era Stops */}
-        {eras.map((era, index) => (
+        {nodes.map((node, index) => (
           <div 
-            key={era.id} 
+            key={node.id} 
             className="absolute transform -translate-y-1/2 flex items-center cursor-pointer group"
-            style={{ top: `${(index / (eras.length - 1)) * 100}%` }}
-            onClick={() => onEraChange(index)}
+            style={{ top: nodes.length > 1 ? `${(index / (nodes.length - 1)) * 100}%` : '50%' }}
+            onClick={() => onNodeChange(index)}
           >
             <div 
               className={`w-4 h-4 rounded-full border-2 transition-all duration-300 z-10 absolute left-1/2 -translate-x-1/2
-                ${index <= activeEraIndex ? 'bg-amber-500 border-black' : 'bg-zinc-700 border-zinc-900'}
+                ${index <= activeIndex ? 'bg-amber-500 border-black' : 'bg-zinc-700 border-zinc-900'}
                 group-hover:scale-125
               `}
             />
             {/* Tooltip on hover */}
             <span className="absolute right-8 px-2 py-1 bg-zinc-900 text-amber-400 text-xs font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-zinc-800">
-              {era.label}
+              {node.label}
             </span>
           </div>
         ))}
@@ -59,7 +66,7 @@ export default function TimelineControls({ eras, activeEraIndex, onEraChange }: 
 
       <button 
         onClick={handleNext}
-        disabled={activeEraIndex === eras.length - 1}
+        disabled={activeIndex === nodes.length - 1}
         className="p-2 rounded-full bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronDown size={20} />

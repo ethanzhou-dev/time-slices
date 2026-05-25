@@ -13,8 +13,8 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
   try {
     // Wikipedia API max radius is 10000m
     const safeRadius = Math.min(radius, 10000);
-    // 1. Fetch nearby pages
-    const geoUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${safeRadius}&gslimit=20&format=json&origin=*`;
+    // 1. Fetch nearby pages from CHINESE Wikipedia
+    const geoUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${safeRadius}&gslimit=30&format=json&origin=*`;
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
     
@@ -26,7 +26,7 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
     const pageIds = pages.map((p: any) => p.pageid).join('|');
 
     // 2. Fetch details (extracts and images) for these pages
-    const detailsUrl = `https://en.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&pithumbsize=400&format=json&origin=*`;
+    const detailsUrl = `https://zh.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&pithumbsize=400&format=json&origin=*`;
     const detailsRes = await fetch(detailsUrl);
     const detailsData = await detailsRes.json();
 
@@ -36,9 +36,22 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
     for (const page of pages) {
       const detail = pageMap[page.pageid];
       if (detail && detail.extract) {
-        // Attempt to find a year in the extract (simple regex looking for 3-4 digit numbers that look like years)
-        const yearMatch = detail.extract.match(/\b([1-9][0-9]{2,3})\b/);
-        const yearHint = yearMatch ? parseInt(yearMatch[1]) : undefined;
+        // Attempt to find a year in the extract (Chinese format: 1994年, 公元前221年, etc.)
+        let yearHint: number | undefined = undefined;
+        
+        // Match "1234年" or "公元前123年"
+        const yearMatch = detail.extract.match(/(公元前)?(\d{2,4})年/);
+        if (yearMatch) {
+          const isBCE = !!yearMatch[1];
+          const year = parseInt(yearMatch[2], 10);
+          yearHint = isBCE ? -year : year;
+        } else {
+          // Fallback: just look for 3-4 digit numbers that might be a year
+          const genericMatch = detail.extract.match(/(1[0-9]{3}|20[0-2][0-9])/);
+          if (genericMatch) {
+            yearHint = parseInt(genericMatch[1], 10);
+          }
+        }
 
         articles.push({
           pageid: page.pageid,
@@ -53,7 +66,15 @@ export async function fetchNearbyHistoricalArticles(lat: number, lon: number, ra
       }
     }
 
-    return articles;
+    // Sort articles chronologically
+    return articles.sort((a, b) => {
+      if (a.yearHint !== undefined && b.yearHint !== undefined) {
+        return a.yearHint - b.yearHint;
+      }
+      if (a.yearHint !== undefined) return -1;
+      if (b.yearHint !== undefined) return 1;
+      return 0;
+    });
   } catch (error) {
     console.error("Failed to fetch Wikipedia data:", error);
     return [];

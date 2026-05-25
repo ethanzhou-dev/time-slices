@@ -75,7 +75,7 @@ export default function EarthMap({ activeEra, articles, onGlobeClick, selectedAr
         width={dimensions.width}
         height={dimensions.height}
         
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+        globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
         bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
         backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
         

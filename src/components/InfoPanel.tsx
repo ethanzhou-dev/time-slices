@@ -147,8 +147,8 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
           </div>
         )}
         
-        <div className="flex-grow overflow-y-auto p-0 flex flex-col z-10">
-          <div className="p-6 pb-2">
+        <div className="flex-grow p-0 flex flex-col z-10 overflow-hidden">
+          <div className="px-6 pt-6 pb-2 shrink-0">
             <div className="flex items-center gap-3 mb-4">
               <md-assist-chip 
                 label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
@@ -161,14 +161,18 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
             <h5 className="text-2xl font-bold mb-2 text-on-surface">
               {article.title}
             </h5>
+          </div>
             
+          <div className="flex-grow overflow-y-auto px-6">
             <p className="text-sm leading-relaxed mb-6 text-on-surface-variant">
               {article.extract}
             </p>
+          </div>
 
+          <div className="px-6 pb-6 pt-2 shrink-0">
             <md-filled-button 
               onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
-              style={{ width: '100%', marginBottom: '16px' }}
+              style={{ width: '100%' }}
             >
               <md-icon slot="icon">auto_stories</md-icon>
               在维基百科上阅读全文

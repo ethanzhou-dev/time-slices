@@ -76,8 +76,11 @@ export default function App() {
     
     currentRotationRef.current += delta;
     
+    // explore 图标本身的指针是倾斜的（指向右上方45度），需要加上 -45 度的补偿角让其默认垂直向上
+    const ICON_OFFSET = -45; 
+    
     // 绕过 React 状态机制，每帧直接修改 DOM transform 获得极高流畅度
-    compassIconRef.current.style.transform = `rotate(${-currentRotationRef.current}deg)`;
+    compassIconRef.current.style.transform = `rotate(${-currentRotationRef.current + ICON_OFFSET}deg)`;
   }, []);
 
   const handleResetNorth = useCallback(() => {
@@ -133,6 +136,7 @@ export default function App() {
             <md-icon
               ref={compassIconRef as any}
               slot="icon"
+              style={{ transform: 'rotate(-45deg)' }}
             >explore</md-icon>
           </md-fab>
         </div>

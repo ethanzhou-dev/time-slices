@@ -284,11 +284,11 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
   }, [clusters]);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black overflow-hidden relative">
-      <div ref={containerRef} className="w-full h-full" />
+    <Box sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', bgcolor: 'black', overflow: 'hidden' }}>
+      <Box ref={containerRef} sx={{ width: '100%', height: '100%' }} />
       
       {/* HTML Markers Overlay */}
-      <div className="absolute inset-0 pointer-events-none z-10">
+      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
         {clusters.map(c => {
           const isCluster = c.properties.cluster;
           const id = isCluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
@@ -296,13 +296,14 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
           if (isCluster) {
             const pointCount = c.properties.point_count;
             return (
-              <div 
+              <Box 
                 key={id}
                 ref={(el: HTMLDivElement | null) => { markerRefs.current[id] = el; }}
-                className="absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group z-30"
+                sx={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.15s', opacity: 0, pointerEvents: 'none', zIndex: 30, '&:hover .cluster-target': { transform: 'translate(-50%, -50%) scale(1.1)' } }}
               >
-                <div 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer pointer-events-auto transition-transform hover:scale-110"
+                <Box 
+                  className="cluster-target"
+                  sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', pointerEvents: 'auto', transition: 'transform 0.3s' }}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!viewerRef.current || !superclusterRef.current) return;
@@ -335,8 +336,8 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                   >
                     {pointCount}
                   </Paper>
-                </div>
-              </div>
+                </Box>
+              </Box>
             );
           }
           
@@ -344,20 +345,20 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
           const isSelected = selectedArticleId === a.pageid;
           
           return (
-            <div 
+            <Box 
               key={id}
               ref={(el: HTMLDivElement | null) => { markerRefs.current[id] = el; }}
-              className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group ${isSelected ? 'z-50' : 'z-10'}`}
+              sx={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.15s', opacity: 0, pointerEvents: 'none', zIndex: isSelected ? 50 : 10, '&:hover .marker-target': { opacity: 1, transform: 'scale(0.9)' } }}
             >
               {/* Marker Icon 容器（原点对齐到底部中心） */}
-              <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center cursor-pointer pointer-events-auto"
+              <Box 
+                sx={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', pointerEvents: 'auto' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onArticleClick(a.pageid);
                 }}
               >
-                <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-75 origin-bottom opacity-90 hover:scale-90 hover:opacity-100'}`}>
+                <Box className={isSelected ? '' : 'marker-target'} sx={{ position: 'relative', transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', transformOrigin: 'bottom', transform: isSelected ? 'scale(1.1)' : 'scale(0.75)', opacity: isSelected ? 1 : 0.9 }}>
                   {isSelected ? (
                     <Fab size="small" color="primary" sx={{ pointerEvents: 'none', width: 40, height: 40, minHeight: 40 }}>
                       <Icon>location_on</Icon>
@@ -371,12 +372,12 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                   {isSelected && (
                     <Box sx={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid', borderTopColor: 'primary.main' }} />
                   )}
-                </div>
-              </div>
+                </Box>
+              </Box>
               
               {/* Label 容器（原点对齐到顶部中心，保持显示） */}
-              <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 mt-1.5 cursor-pointer pointer-events-auto"
+              <Box 
+                sx={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', mt: 0.75, cursor: 'pointer', pointerEvents: 'auto' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onArticleClick(a.pageid);
@@ -404,12 +405,12 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                 >
                   {a.title}
                 </Paper>
-              </div>
-            </div>
+              </Box>
+            </Box>
           );
         })}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }));
 

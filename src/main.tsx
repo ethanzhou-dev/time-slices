@@ -32,6 +32,11 @@ const darkTheme = createTheme({
     borderRadius: 16, // md-sys-shape-corner-large
   },
   components: {
+    MuiIcon: {
+      defaultProps: {
+        baseClassName: 'material-symbols-outlined',
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {

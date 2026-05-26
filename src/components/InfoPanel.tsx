@@ -23,7 +23,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
     borderColor: 'divider',
     overflow: 'hidden',
     zIndex: 10,
-    borderRadius: 7, // equivalent to md-sys-shape-corner-extra-large
+    borderRadius: '28px', // equivalent to md-sys-shape-corner-extra-large
   };
 
   const renderDirectoryPanel = () => {

@@ -54,7 +54,7 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
           alignItems: 'center',
           py: 2,
           zIndex: 10,
-          borderRadius: 7, // matches md-sys-shape-corner-extra-large
+          borderRadius: '28px', // matches md-sys-shape-corner-extra-large
         }}
       >
         <IconButton 

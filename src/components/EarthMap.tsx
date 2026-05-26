@@ -8,24 +8,29 @@ import type { WikiArticle } from '../services/wikipediaApi';
 
 export interface EarthMapRef {
   getViewportBounds: () => { north: number, south: number, east: number, west: number } | null;
+  resetToNorth: () => void;
 }
 
 interface EarthMapProps {
   articles: WikiArticle[];
   selectedArticleId: number | null;
   onArticleClick: (id: number) => void;
+  onHeadingChange?: (headingDeg: number) => void;
 }
 
-const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
+const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick, onHeadingChange }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const markerRefs = useRef<Record<number, HTMLDivElement | null>>({});
   // 性能优化：预计算缓存，避免每帧分配新对象
   const cachedPositionsRef = useRef<Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>>(new Map());
   const scratchCartesian = useRef(new Cesium.Cartesian3());
-  // 性能优化：用 ref 持有最新的 onArticleClick，使 Cesium 事件处理器无需重建
+  // 性能优化：用 ref 持有最新的回调，使 Cesium 事件处理器无需重建
   const onArticleClickRef = useRef(onArticleClick);
   onArticleClickRef.current = onArticleClick;
+  const onHeadingChangeRef = useRef(onHeadingChange);
+  onHeadingChangeRef.current = onHeadingChange;
+  const lastHeadingRef = useRef(-1);
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -39,6 +44,21 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
         east: Cesium.Math.toDegrees(rect.east),
         west: Cesium.Math.toDegrees(rect.west)
       };
+    },
+    resetToNorth: () => {
+      if (!viewerRef.current) return;
+      const viewer = viewerRef.current;
+      const camera = viewer.camera;
+      // 平滑飞行回正北方向，保持当前位置和高度
+      camera.flyTo({
+        destination: camera.positionWC.clone(),
+        orientation: {
+          heading: 0, // 正北
+          pitch: camera.pitch,
+          roll: 0
+        },
+        duration: 0.5
+      });
     }
   }));
 
@@ -118,6 +138,20 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
       viewerRef.current = viewer;
+
+      // 监听相机方向变化，通知父组件更新指南针
+      // 使用 preRender 以便在 flyTo 动画期间也能平滑更新
+      const reportHeading = () => {
+        const headingDeg = Cesium.Math.toDegrees(viewer.camera.heading);
+        // 只在变化超过 0.5 度时才更新，避免不必要的 setState
+        if (Math.abs(headingDeg - lastHeadingRef.current) > 0.5) {
+          lastHeadingRef.current = headingDeg;
+          onHeadingChangeRef.current?.(headingDeg);
+        }
+      };
+      viewer.scene.preRender.addEventListener(reportHeading);
+      // 初始报告一次
+      reportHeading();
     };
     
     initViewer();

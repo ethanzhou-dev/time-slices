@@ -15,6 +15,7 @@ export default function App() {
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
   const earthMapRef = useRef<EarthMapRef>(null);
+  const [cameraHeading, setCameraHeading] = useState(0);
 
   const timelineNodes = useMemo<TimelineNode[]>(() => {
     if (articles.length === 0) return [];
@@ -63,6 +64,14 @@ export default function App() {
     }
   }, []);
 
+  const handleHeadingChange = useCallback((headingDeg: number) => {
+    setCameraHeading(headingDeg);
+  }, []);
+
+  const handleResetNorth = useCallback(() => {
+    earthMapRef.current?.resetToNorth();
+  }, []);
+
   const handleTimelineChange = useCallback((index: number) => {
     // 通过函数式访问 timelineNodes，但 timelineNodes 是 useMemo 的，引用稳定
     if (timelineNodes[index]) {
@@ -82,6 +91,7 @@ export default function App() {
         articles={articles}
         selectedArticleId={selectedArticleId}
         onArticleClick={handleArticleClick}
+        onHeadingChange={handleHeadingChange}
       />
 
       {/* Header Overlay */}
@@ -128,6 +138,24 @@ export default function App() {
           disabled={searchStatus === 'loading' || undefined}
         >
           <md-icon slot="icon">search</md-icon>
+        </md-fab>
+      </div>
+
+      {/* Compass Button - 指南针 */}
+      <div className="absolute bottom-6 right-6 z-10">
+        <md-fab
+          size="small"
+          variant="surface"
+          aria-label="指南针 - 点击回正朝北"
+          onClick={handleResetNorth}
+        >
+          <md-icon
+            slot="icon"
+            style={{
+              transform: `rotate(${-cameraHeading}deg)`,
+              transition: 'transform 0.3s ease-out'
+            }}
+          >explore</md-icon>
         </md-fab>
       </div>
 

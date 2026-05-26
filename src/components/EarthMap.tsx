@@ -87,6 +87,15 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       if (viewer.scene.sun) viewer.scene.sun.show = false;
       if (viewer.scene.moon) viewer.scene.moon.show = false;
 
+      // 性能优化：减少瓦片加载量（默认值为 2，提高到 4 减少约 50% 瓦片请求，视觉影响极小）
+      viewer.scene.globe.maximumScreenSpaceError = 4;
+      // 性能优化：高 DPI 屏幕自动降采样，Retina 屏渲染量降低约 44%
+      if (window.devicePixelRatio > 1) {
+        viewer.resolutionScale = 0.75;
+      }
+      // 性能优化：禁用 MSAA 抗锯齿（对 2D 地图瓦片收益极小，但 GPU 开销明显）
+      viewer.scene.msaaSamples = 1;
+
       // Handle Map Clicks
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction((click: any) => {

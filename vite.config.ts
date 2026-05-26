@@ -10,4 +10,16 @@ export default defineConfig({
     react(),
     cesium(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // 性能优化：将 Cesium 分离为独立 chunk，支持并行下载和长期浏览器缓存
+        manualChunks(id: string) {
+          if (id.includes('node_modules/cesium')) {
+            return 'cesium';
+          }
+        },
+      },
+    },
+  },
 })

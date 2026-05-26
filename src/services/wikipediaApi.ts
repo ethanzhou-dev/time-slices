@@ -42,13 +42,16 @@ export async function fetchArticlesInBounds(north: number, west: number, south: 
 
     const articles: WikiArticle[] = [];
 
-    for (const chunk of chunks) {
+    // 性能优化：并行发送所有分块请求，而非串行等待
+    const chunkResults = await Promise.all(chunks.map(async (chunk) => {
       const chunkIds = chunk.map((p: any) => p.pageid).join('|');
       const detailsUrl = `https://zh.wikipedia.org/w/api.php?action=query&pageids=${chunkIds}&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&pithumbsize=400&format=json&origin=*`;
       const detailsRes = await fetch(detailsUrl);
       const detailsData = await detailsRes.json();
-      const pageMap = detailsData.query.pages;
+      return { chunk, pageMap: detailsData.query.pages };
+    }));
 
+    for (const { chunk, pageMap } of chunkResults) {
       for (const page of chunk) {
         const detail = pageMap[page.pageid];
         if (detail && detail.extract) {

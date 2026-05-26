@@ -43,8 +43,9 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
     if (!sc || !viewer) return;
     
     const height = viewer.camera.positionCartographic.height;
-    // zoom level roughly maps to height: zoom 0 ~ 20,000,000m, each zoom level halves the height
-    let zoom = Math.round(Math.log2(20000000 / height));
+    // 修正的 Zoom 计算公式：Cesium 的高度和 Web Mercator Zoom 的换算
+    // 之前算出的 zoom 偏小了 3 级，导致 supercluster 误以为处于极远的距离从而过度聚合
+    let zoom = Math.floor(Math.log2(150000000 / height));
     zoom = Math.max(0, Math.min(zoom, 20));
     currentZoomRef.current = zoom;
 
@@ -193,7 +194,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
   // 当文章数据更新时，初始化 Supercluster
   useEffect(() => {
     const sc = new Supercluster({
-      radius: 60,
+      radius: 40, // 减小聚合半径，要求点靠得更近才合并
       maxZoom: 20,
     });
     

@@ -1,7 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, memo } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { MapPin } from 'lucide-react';
+
 import '@material/web/fab/fab.js';
 import '@material/web/elevation/elevation.js';
 import type { WikiArticle } from '../services/wikipediaApi';
@@ -138,7 +138,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
 
   // 动态更新 HTML 标记点位置
   useEffect(() => {
-    if (!viewerRef.current) return;
+    if (!viewerRef.current || articles.length === 0) return;
     const viewer = viewerRef.current;
 
     // 清除旧的实体
@@ -218,11 +218,11 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                 <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-75 origin-bottom opacity-90 hover:scale-90 hover:opacity-100'}`}>
                   {isSelected ? (
                     <md-fab size="small" variant="primary" class="pointer-events-none">
-                      <MapPin className="w-5 h-5" slot="icon" />
+                      <md-icon slot="icon">location_on</md-icon>
                     </md-fab>
                   ) : (
                     <md-fab size="small" variant="secondary" class="pointer-events-none">
-                      <MapPin className="w-5 h-5" slot="icon" />
+                      <md-icon slot="icon">location_on</md-icon>
                     </md-fab>
                   )}
                   {/* 底部三角形指示器 (选中的才有) */}

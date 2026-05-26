@@ -29,9 +29,9 @@ export default function App() {
   }, [articles]);
 
   const activeTimelineIndex = useMemo(() => {
-    if (timelineNodes.length === 0 || !selectedArticleId) return 0;
+    if (timelineNodes.length === 0 || !selectedArticleId) return -1;
     const index = timelineNodes.findIndex(n => n.articleId === selectedArticleId);
-    return index !== -1 ? index : 0;
+    return index;
   }, [timelineNodes, selectedArticleId]);
 
   // 性能优化：用 useCallback 稳定回调引用，避免子组件因引用变化而重渲染

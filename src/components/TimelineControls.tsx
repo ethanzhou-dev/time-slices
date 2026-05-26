@@ -18,8 +18,8 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll active item into view
-    if (containerRef.current) {
+    // Scroll active item into view (skip when no selection)
+    if (containerRef.current && activeIndex >= 0) {
       const activeEl = containerRef.current.children[activeIndex] as HTMLElement;
       if (activeEl) {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -34,7 +34,7 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
   };
 
   const handleNext = () => {
-    if (activeIndex < nodes.length - 1) onNodeChange(activeIndex + 1);
+    if (activeIndex < nodes.length - 1) onNodeChange(activeIndex < 0 ? 0 : activeIndex + 1);
   };
 
   return (
@@ -44,7 +44,7 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
     >
       <md-icon-button 
         onClick={handlePrev} 
-        disabled={activeIndex === 0 || undefined}
+        disabled={activeIndex <= 0 || undefined}
         className="mb-2 shrink-0"
       >
         <md-icon>keyboard_arrow_up</md-icon>

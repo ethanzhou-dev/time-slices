@@ -78,6 +78,12 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       
       viewer.imageryLayers.addImageryProvider(cartoDarkProvider);
 
+      // 设置默认视角为中国
+      // 标准中心点通常取经度 105°E，纬度 35°N，高度约 20000 公里以总览全局
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(105.0, 35.0, 20000000.0)
+      });
+
       // 禁用耗性能的视觉特效，保证地图流畅度
       viewer.scene.globe.enableLighting = false; 
       viewer.scene.globe.showWaterEffect = false;

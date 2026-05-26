@@ -300,10 +300,10 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
               <div 
                 key={id}
                 ref={(el: HTMLDivElement | null) => { markerRefs.current[id] = el; }}
-                className="absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group z-30"
+                className="absolute top-0 left-0 transition-opacity duration-200 opacity-0 pointer-events-none group z-30"
               >
                 <div 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer pointer-events-auto transition-transform hover:scale-110"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!viewerRef.current || !superclusterRef.current) return;
@@ -317,9 +317,12 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                     });
                   }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-[0_4px_12px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold border-2 border-[var(--md-sys-color-surface)]">
-                    {pointCount}
-                  </div>
+                  {/* 使用真正的 MD3 FAB 组件替代手工画的圆形，保证阴影、涟漪和悬浮效果 100% 符合 MD3 规范 */}
+                  <md-fab size="small" variant="tertiary" class="pointer-events-none">
+                    <span slot="icon" style={{ fontSize: '14px', fontWeight: '900', fontFamily: 'Roboto, system-ui' }}>
+                      {pointCount > 99 ? '99+' : pointCount}
+                    </span>
+                  </md-fab>
                 </div>
               </div>
             );

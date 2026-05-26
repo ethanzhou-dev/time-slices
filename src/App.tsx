@@ -92,10 +92,10 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight leading-none text-white m-0">
-              Terra<span className="text-primary">Chronos</span>
+              Time<span className="text-primary"> Slices</span>
             </h1>
             <p className="text-outline font-bold tracking-widest text-xs uppercase m-0 mt-1">
-              互动历史
+              历史地图
             </p>
           </div>
         </div>

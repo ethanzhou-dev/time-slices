@@ -15,7 +15,8 @@ export default function App() {
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
   const earthMapRef = useRef<EarthMapRef>(null);
-  const [cameraHeading, setCameraHeading] = useState(0);
+  const compassIconRef = useRef<HTMLElement>(null);
+  const currentRotationRef = useRef(0);
 
   const timelineNodes = useMemo<TimelineNode[]>(() => {
     if (articles.length === 0) return [];
@@ -65,7 +66,18 @@ export default function App() {
   }, []);
 
   const handleHeadingChange = useCallback((headingDeg: number) => {
-    setCameraHeading(headingDeg);
+    if (!compassIconRef.current) return;
+    
+    // 计算最短旋转路径，避免跨越正北方向时出现 360 度“大风车”狂转
+    let delta = headingDeg - (currentRotationRef.current % 360);
+    // 归一化 delta 到 [-180, 180] 范围内
+    if (delta > 180) delta -= 360;
+    else if (delta < -180) delta += 360;
+    
+    currentRotationRef.current += delta;
+    
+    // 绕过 React 状态机制，每帧直接修改 DOM transform 获得极高流畅度
+    compassIconRef.current.style.transform = `rotate(${-currentRotationRef.current}deg)`;
   }, []);
 
   const handleResetNorth = useCallback(() => {
@@ -119,11 +131,8 @@ export default function App() {
             onClick={handleResetNorth}
           >
             <md-icon
+              ref={compassIconRef as any}
               slot="icon"
-              style={{
-                transform: `rotate(${-cameraHeading}deg)`,
-                transition: 'transform 0.3s ease-out'
-              }}
             >explore</md-icon>
           </md-fab>
         </div>

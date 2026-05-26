@@ -143,8 +143,8 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       // 使用 preRender 以便在 flyTo 动画期间也能平滑更新
       const reportHeading = () => {
         const headingDeg = Cesium.Math.toDegrees(viewer.camera.heading);
-        // 只在变化超过 0.5 度时才更新，避免不必要的 setState
-        if (Math.abs(headingDeg - lastHeadingRef.current) > 0.5) {
+        // 直接上报，由父组件通过 DOM 操作实现每帧丝滑更新，无需节流
+        if (headingDeg !== lastHeadingRef.current) {
           lastHeadingRef.current = headingDeg;
           onHeadingChangeRef.current?.(headingDeg);
         }

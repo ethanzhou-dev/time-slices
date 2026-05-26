@@ -20,6 +20,9 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const markerRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  // 性能优化：预计算缓存，避免每帧分配新对象
+  const cachedPositionsRef = useRef<Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>>(new Map());
+  const scratchCartesian = useRef(new Cesium.Cartesian3());
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -109,6 +112,18 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     };
   }, []);
 
+  // 性能优化：articles 变化时一次性预计算所有 Cartesian3 坐标和地表法线，缓存到 Map 中
+  // 避免在每帧的 preRender 回调中反复 new Cesium.Cartesian3()，消除 GC 压力
+  useEffect(() => {
+    const cache = new Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>();
+    articles.forEach(a => {
+      const cartesian = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
+      const normal = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cartesian, new Cesium.Cartesian3());
+      cache.set(a.pageid, { cartesian, normal });
+    });
+    cachedPositionsRef.current = cache;
+  }, [articles]);
+
   // 动态更新 HTML 标记点位置
   useEffect(() => {
     if (!viewerRef.current) return;
@@ -118,21 +133,24 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     viewer.entities.removeAll();
 
     const updatePositions = () => {
+      const cache = cachedPositionsRef.current;
+      const scratch = scratchCartesian.current;
+
       articles.forEach(a => {
         const el = markerRefs.current[a.pageid];
         if (!el) return;
 
-        const position = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
-        
+        const cached = cache.get(a.pageid);
+        if (!cached) return;
+
         // 检查点是否在地球背面（地平线剔除）
-        // 计算地表法线与相机的夹角
-        const normal = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(position);
-        const toCamera = Cesium.Cartesian3.subtract(viewer.camera.positionWC, position, new Cesium.Cartesian3());
-        const isVisible = Cesium.Cartesian3.dot(normal, toCamera) > 0;
+        // 复用 scratchCartesian 避免每帧分配新对象
+        const toCamera = Cesium.Cartesian3.subtract(viewer.camera.positionWC, cached.cartesian, scratch);
+        const isVisible = Cesium.Cartesian3.dot(cached.normal, toCamera) > 0;
 
         if (isVisible) {
           // 在较新的 Cesium 版本中，wgs84ToWindowCoordinates 已被重命名为 worldToWindowCoordinates
-          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, position);
+          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, cached.cartesian);
           if (screenPosition) {
             // 核心性能优化：通过 translate3d 开启 GPU 硬件加速，并直接操作 DOM，避免 React 每帧渲染导致卡顿
             el.style.transform = `translate3d(${screenPosition.x}px, ${screenPosition.y}px, 0)`;
@@ -160,7 +178,7 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
     return () => {
       viewer.scene.preRender.removeEventListener(updatePositions);
     };
-  }, [articles, selectedArticleId]);
+  }, [articles]);
 
   return (
     <div className="absolute inset-0 w-full h-full bg-black overflow-hidden relative">

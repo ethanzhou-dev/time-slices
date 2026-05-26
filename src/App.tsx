@@ -147,12 +147,12 @@ export default function App() {
           size="small"
           variant="surface"
           aria-label="指南针 - 点击回正朝北"
+          style={{ '--md-fab-icon-color': 'var(--md-sys-color-primary)' } as any}
           onClick={handleResetNorth}
         >
           <md-icon
             slot="icon"
             style={{
-              color: 'var(--md-sys-color-primary)',
               transform: `rotate(${-cameraHeading}deg)`,
               transition: 'transform 0.3s ease-out'
             }}

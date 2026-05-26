@@ -1,6 +1,6 @@
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 
 export interface TimelineNode {
   id: number;
@@ -14,7 +14,7 @@ interface TimelineControlsProps {
   onNodeChange: (index: number) => void;
 }
 
-export default function TimelineControls({ nodes, activeIndex, onNodeChange }: TimelineControlsProps) {
+const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, onNodeChange }: TimelineControlsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,4 +93,6 @@ export default function TimelineControls({ nodes, activeIndex, onNodeChange }: T
       </md-icon-button>
     </div>
   );
-}
+});
+
+export default TimelineControls;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
 
 import '@material/web/progress/circular-progress.js';
@@ -18,7 +18,7 @@ interface InfoPanelProps {
   searchStatus: SearchStatus;
 }
 
-export default function InfoPanel({ article, articles = [], onArticleClick, searchStatus }: InfoPanelProps) {
+const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleClick, searchStatus }: InfoPanelProps) {
   const [directoryOpen, setDirectoryOpen] = useState(false);
   
   const isDirectoryVisible = articles.length > 0 && !['loading', 'empty', 'too_large'].includes(searchStatus);
@@ -189,4 +189,6 @@ export default function InfoPanel({ article, articles = [], onArticleClick, sear
       {renderContent()}
     </>
   );
-}
+});
+
+export default InfoPanel;

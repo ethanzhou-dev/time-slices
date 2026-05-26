@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import EarthMap from './components/EarthMap';
 import type { EarthMapRef } from './components/EarthMap';
 import TimelineControls from './components/TimelineControls';
@@ -34,7 +34,12 @@ export default function App() {
     return index !== -1 ? index : 0;
   }, [timelineNodes, selectedArticleId]);
 
-  const handleScanViewport = async () => {
+  // 性能优化：用 useCallback 稳定回调引用，避免子组件因引用变化而重渲染
+  const handleArticleClick = useCallback((id: number) => {
+    setSelectedArticleId(id);
+  }, []);
+
+  const handleScanViewport = useCallback(async () => {
     if (!earthMapRef.current) return;
     
     const bounds = earthMapRef.current.getViewportBounds();
@@ -56,15 +61,18 @@ export default function App() {
     } else {
       setSearchStatus(result.status);
     }
-  };
+  }, []);
 
-  const handleTimelineChange = (index: number) => {
+  const handleTimelineChange = useCallback((index: number) => {
+    // 通过函数式访问 timelineNodes，但 timelineNodes 是 useMemo 的，引用稳定
     if (timelineNodes[index]) {
       setSelectedArticleId(timelineNodes[index].articleId);
     }
-  };
+  }, [timelineNodes]);
 
-  const selectedArticle = articles.find(a => a.pageid === selectedArticleId) || null;
+  const selectedArticle = useMemo(() => 
+    articles.find(a => a.pageid === selectedArticleId) || null
+  , [articles, selectedArticleId]);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-background">
@@ -73,7 +81,7 @@ export default function App() {
         ref={earthMapRef}
         articles={articles}
         selectedArticleId={selectedArticleId}
-        onArticleClick={setSelectedArticleId}
+        onArticleClick={handleArticleClick}
       />
 
       {/* Header Overlay */}
@@ -97,7 +105,7 @@ export default function App() {
       <InfoPanel 
         article={selectedArticle}
         articles={articles}
-        onArticleClick={setSelectedArticleId}
+        onArticleClick={handleArticleClick}
         searchStatus={searchStatus}
       />
 

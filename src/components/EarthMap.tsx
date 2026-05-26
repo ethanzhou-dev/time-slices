@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, memo } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { MapPin } from 'lucide-react';
@@ -16,13 +16,16 @@ interface EarthMapProps {
   onArticleClick: (id: number) => void;
 }
 
-const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
+const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const markerRefs = useRef<Record<number, HTMLDivElement | null>>({});
   // 性能优化：预计算缓存，避免每帧分配新对象
   const cachedPositionsRef = useRef<Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>>(new Map());
   const scratchCartesian = useRef(new Cesium.Cartesian3());
+  // 性能优化：用 ref 持有最新的 onArticleClick，使 Cesium 事件处理器无需重建
+  const onArticleClickRef = useRef(onArticleClick);
+  onArticleClickRef.current = onArticleClick;
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -92,7 +95,7 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
           if (pickedObject.id.name) {
             const pageId = parseInt(pickedObject.id.name);
             if (!isNaN(pageId)) {
-              onArticleClick(pageId);
+              onArticleClickRef.current(pageId);
               return;
             }
           }
@@ -192,7 +195,7 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
           return (
             <div 
               key={a.pageid}
-              ref={(el) => { markerRefs.current[a.pageid] = el; }}
+              ref={(el: HTMLDivElement | null) => { markerRefs.current[a.pageid] = el; }}
               className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group ${isSelected ? 'z-50' : 'z-10'}`}
             >
               {/* Marker Icon 容器（原点对齐到底部中心） */}
@@ -243,6 +246,8 @@ const EarthMap = forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArt
       </div>
     </div>
   );
-});
+}));
+
+EarthMap.displayName = 'EarthMap';
 
 export default EarthMap;

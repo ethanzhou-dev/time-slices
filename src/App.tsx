@@ -142,12 +142,11 @@ export default function App() {
       </div>
 
       {/* Compass Button - 指南针 */}
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute bottom-6 right-6 z-10">
         <md-fab
           size="small"
           variant="surface"
           aria-label="指南针 - 点击回正朝北"
-          style={{ '--md-fab-icon-color': 'var(--md-sys-color-inverse-primary)' } as any}
           onClick={handleResetNorth}
         >
           <md-icon

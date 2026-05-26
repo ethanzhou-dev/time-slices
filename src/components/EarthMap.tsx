@@ -3,8 +3,7 @@ import * as Cesium from 'cesium';
 import Supercluster from 'supercluster';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
-import '@material/web/fab/fab.js';
-import '@material/web/elevation/elevation.js';
+import { Fab, Icon, Paper, Box } from '@mui/material';
 import type { WikiArticle } from '../services/wikipediaApi';
 
 export interface EarthMapRef {
@@ -317,9 +316,25 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                     });
                   }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-[0_4px_12px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold border-2 border-[var(--md-sys-color-surface)]">
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.875rem',
+                      fontWeight: 'bold',
+                      border: '2px solid',
+                      borderColor: 'background.default',
+                    }}
+                  >
                     {pointCount}
-                  </div>
+                  </Paper>
                 </div>
               </div>
             );
@@ -344,17 +359,17 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
               >
                 <div className={`relative transition-all duration-300 flex items-center justify-center ${isSelected ? 'scale-110' : 'scale-75 origin-bottom opacity-90 hover:scale-90 hover:opacity-100'}`}>
                   {isSelected ? (
-                    <md-fab size="small" variant="primary" class="pointer-events-none">
-                      <md-icon slot="icon">location_on</md-icon>
-                    </md-fab>
+                    <Fab size="small" color="primary" sx={{ pointerEvents: 'none', width: 40, height: 40, minHeight: 40 }}>
+                      <Icon>location_on</Icon>
+                    </Fab>
                   ) : (
-                    <md-fab size="small" variant="secondary" class="pointer-events-none">
-                      <md-icon slot="icon">location_on</md-icon>
-                    </md-fab>
+                    <Fab size="small" color="secondary" sx={{ pointerEvents: 'none', width: 40, height: 40, minHeight: 40 }}>
+                      <Icon>location_on</Icon>
+                    </Fab>
                   )}
                   {/* 底部三角形指示器 (选中的才有) */}
                   {isSelected && (
-                    <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[var(--md-sys-color-primary)]"></div>
+                    <Box sx={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid', borderTopColor: 'primary.main' }} />
                   )}
                 </div>
               </div>
@@ -367,14 +382,28 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                   onArticleClick(a.pageid);
                 }}
               >
-                <div className={`transition-all duration-300 relative overflow-hidden whitespace-nowrap ${
-                  isSelected 
-                    ? 'px-3 py-1.5 rounded-lg text-sm font-bold bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-lg scale-100' 
-                    : 'px-2 py-1 rounded-md text-xs font-medium bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)] shadow-sm border border-[var(--md-sys-color-outline-variant)] scale-95 opacity-80 hover:opacity-100 hover:scale-100'
-                }`}>
-                  <md-elevation level={isSelected ? 3 : 1}></md-elevation>
+                <Paper
+                  elevation={isSelected ? 4 : 1}
+                  sx={{
+                    transition: 'all 0.3s',
+                    whiteSpace: 'nowrap',
+                    px: isSelected ? 1.5 : 1,
+                    py: isSelected ? 0.75 : 0.5,
+                    borderRadius: isSelected ? 2 : 1,
+                    fontSize: isSelected ? '0.875rem' : '0.75rem',
+                    fontWeight: isSelected ? 'bold' : 'medium',
+                    bgcolor: isSelected ? 'primary.main' : 'background.paper',
+                    color: isSelected ? 'primary.contrastText' : 'text.secondary',
+                    transform: isSelected ? 'scale(1)' : 'scale(0.95)',
+                    opacity: isSelected ? 1 : 0.8,
+                    '&:hover': {
+                      opacity: 1,
+                      transform: 'scale(1)',
+                    }
+                  }}
+                >
                   {a.title}
-                </div>
+                </Paper>
               </div>
             </div>
           );

@@ -1,83 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
-@import "tailwindcss";
-
-@theme {
-  --font-sans: "Roboto", system-ui, sans-serif;
-  --color-primary: #D0BCFF;
-  --color-on-primary: #381E72;
-  --color-primary-container: #4F378B;
-  --color-on-primary-container: #EADDFF;
-  --color-secondary: #CCC2DC;
-  --color-on-secondary: #332D41;
-  --color-error: #F2B8B5;
-  --color-on-error: #601410;
-  --color-surface: #141218;
-  --color-on-surface: #E6E0E9;
-  --color-surface-variant: #49454F;
-  --color-on-surface-variant: #CAC4D0;
-  --color-surface-container-low: #1D1B20;
-  --color-surface-container: #211F26;
-  --color-surface-container-high: #2B2930;
-  --color-outline: #938F99;
-  --color-outline-variant: #49454F;
-}
-
-:root {
-  color-scheme: dark;
-  /* Baseline Dark Theme MD3 Tokens for Material Web */
-  --md-sys-color-primary: #D0BCFF;
-  --md-sys-color-on-primary: #381E72;
-  --md-sys-color-primary-container: #4F378B;
-  --md-sys-color-on-primary-container: #EADDFF;
-  --md-sys-color-secondary: #CCC2DC;
-  --md-sys-color-on-secondary: #332D41;
-  --md-sys-color-secondary-container: #4A4458;
-  --md-sys-color-on-secondary-container: #E8DEF8;
-  --md-sys-color-tertiary: #EFB8C8;
-  --md-sys-color-on-tertiary: #492532;
-  --md-sys-color-tertiary-container: #633B48;
-  --md-sys-color-on-tertiary-container: #FFD8E4;
-  --md-sys-color-error: #F2B8B5;
-  --md-sys-color-on-error: #601410;
-  --md-sys-color-error-container: #8C1D18;
-  --md-sys-color-on-error-container: #F9DEDC;
-  --md-sys-color-background: #141218;
-  --md-sys-color-on-background: #E6E0E9;
-  --md-sys-color-surface: #141218;
-  --md-sys-color-on-surface: #E6E0E9;
-  --md-sys-color-surface-variant: #49454F;
-  --md-sys-color-on-surface-variant: #CAC4D0;
-  --md-sys-color-outline: #938F99;
-  --md-sys-color-outline-variant: #49454F;
-  --md-sys-color-shadow: #000000;
-  --md-sys-color-scrim: #000000;
-  --md-sys-color-inverse-surface: #E6E0E9;
-  --md-sys-color-inverse-on-surface: #322F35;
-  --md-sys-color-inverse-primary: #6750A4;
-
-  --md-sys-typescale-body-medium-font-family: 'Roboto', sans-serif;
-  --md-sys-typescale-label-large-font-family: 'Roboto', sans-serif;
-
-  --md-sys-shape-corner-none: 0px;
-  --md-sys-shape-corner-extra-small: 4px;
-  --md-sys-shape-corner-small: 8px;
-  --md-sys-shape-corner-medium: 12px;
-  --md-sys-shape-corner-large: 16px;
-  --md-sys-shape-corner-extra-large: 28px;
-  --md-sys-shape-corner-full: 9999px;
-  
-  font-family: 'Roboto', sans-serif;
-  background-color: var(--md-sys-color-background);
-  color: var(--md-sys-color-on-background);
-}
 
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  font-family: 'Roboto', sans-serif;
 }
-
 
 /* Hide scrollbar for a cleaner cinematic look but keep functionality */
 ::-webkit-scrollbar {
@@ -85,12 +14,12 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--md-sys-color-surface-container-low);
+  background: #1D1B20; /* MUI Dark surfaceContainerLow */
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--md-sys-color-surface-variant);
+  background: #49454F; /* MUI Dark surfaceVariant */
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--md-sys-color-outline);
+  background: #938F99; /* MUI Dark outline */
 }

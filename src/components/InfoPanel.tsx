@@ -1,15 +1,6 @@
 import { useState, memo } from 'react';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
-
-import '@material/web/progress/circular-progress.js';
-import '@material/web/button/filled-button.js';
-import '@material/web/button/text-button.js';
-import '@material/web/chips/assist-chip.js';
-import '@material/web/icon/icon.js';
-import '@material/web/list/list.js';
-import '@material/web/list/list-item.js';
-import '@material/web/divider/divider.js';
-import '@material/web/elevation/elevation.js';
+import { Box, Paper, CircularProgress, Typography, Icon, Chip, Button, List, ListItemButton, ListItemText, ListItemIcon, Collapse, Fade } from '@mui/material';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
@@ -22,164 +13,187 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
   const [directoryOpen, setDirectoryOpen] = useState(false);
   
   const isDirectoryVisible = articles.length > 0 && !['loading', 'empty', 'too_large'].includes(searchStatus);
-  const baseCardClasses = `absolute left-6 bottom-24 w-80 bg-surface-container-low border border-outline-variant overflow-hidden z-10 transition-all duration-300 ${isDirectoryVisible ? 'top-[172px]' : 'top-24'}`;
-  const cardStyle = { borderRadius: 'var(--md-sys-shape-corner-extra-large)' };
+  
+  const paperSx = {
+    position: 'absolute',
+    left: 24,
+    width: 320,
+    bgcolor: 'background.paper',
+    border: '1px solid',
+    borderColor: 'divider',
+    overflow: 'hidden',
+    zIndex: 10,
+    borderRadius: 7, // equivalent to md-sys-shape-corner-extra-large
+  };
 
   const renderDirectoryPanel = () => {
     if (!isDirectoryVisible) return null;
     return (
-      <div 
-        className="absolute left-6 top-24 w-80 bg-surface-container-low border border-outline-variant z-20 flex flex-col overflow-hidden animate-in fade-in duration-300"
-        style={cardStyle}
-      >
-        <md-elevation level="3"></md-elevation>
-        <button 
-          className="w-full flex items-center justify-between p-4 bg-transparent border-none cursor-pointer hover:bg-surface-variant/30 transition-colors z-10"
-          onClick={() => setDirectoryOpen(!directoryOpen)}
-        >
-          <div className="flex items-center gap-2 text-on-surface">
-            <md-icon>format_list_bulleted</md-icon>
-            <span className="font-bold text-sm">扫描结果目录 ({articles.length})</span>
-          </div>
-          <md-icon className="text-on-surface-variant transition-transform duration-300" style={{ transform: directoryOpen ? 'rotate(180deg)' : 'none' }}>
-            expand_more
-          </md-icon>
-        </button>
-        
-        <div 
-          className="transition-all duration-300 ease-in-out bg-surface-container-lowest z-10"
-          style={{ maxHeight: directoryOpen ? '400px' : '0' }}
-        >
-          <div className="overflow-y-auto border-t border-outline-variant" style={{ maxHeight: '400px' }}>
-            <md-list>
-              {articles.map((a) => (
-                <md-list-item 
-                  key={a.pageid}
-                  type="button"
-                  onClick={() => {
-                    if (onArticleClick) onArticleClick(a.pageid);
-                    setDirectoryOpen(false); // 选中后自动收起
-                  }}
-                  className={a.pageid === article?.pageid ? 'bg-primary/10' : ''}
-                >
-                  <div slot="headline" className={a.pageid === article?.pageid ? 'text-primary font-bold' : ''}>
-                    {a.title}
-                  </div>
-                  <div slot="supporting-text" className="text-xs">
-                    {a.yearHint ? (a.yearHint < 0 ? `公元前${Math.abs(a.yearHint)}年` : `${a.yearHint}年`) : '未知年份'} · {Math.abs(a.lat).toFixed(2)}°{a.lat >= 0 ? 'N' : 'S'}, {Math.abs(a.lon).toFixed(2)}°{a.lon >= 0 ? 'E' : 'W'}
-                  </div>
-                  <md-icon slot="end" style={{ opacity: a.pageid === article?.pageid ? 1 : 0, color: 'var(--md-sys-color-primary)' }}>
-                    check
-                  </md-icon>
-                </md-list-item>
-              ))}
-            </md-list>
-          </div>
-        </div>
-      </div>
+      <Fade in={true} timeout={300}>
+        <Paper elevation={3} sx={{ ...paperSx, top: 96, zIndex: 20, display: 'flex', flexDirection: 'column' }}>
+          <Button 
+            fullWidth
+            onClick={() => setDirectoryOpen(!directoryOpen)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              p: 2,
+              borderRadius: 0,
+              color: 'text.primary',
+              bgcolor: 'transparent',
+              '&:hover': { bgcolor: 'action.hover' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Icon>format_list_bulleted</Icon>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>扫描结果目录 ({articles.length})</Typography>
+            </Box>
+            <Icon sx={{ color: 'text.secondary', transform: directoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
+              expand_more
+            </Icon>
+          </Button>
+          
+          <Collapse in={directoryOpen} timeout="auto" unmountOnExit>
+            <Box sx={{ maxHeight: 400, overflowY: 'auto', borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
+              <List disablePadding>
+                {articles.map((a) => {
+                  const isSelected = a.pageid === article?.pageid;
+                  return (
+                    <ListItemButton 
+                      key={a.pageid}
+                      onClick={() => {
+                        if (onArticleClick) onArticleClick(a.pageid);
+                        setDirectoryOpen(false); // 选中后自动收起
+                      }}
+                      sx={{ bgcolor: isSelected ? 'action.selected' : 'transparent' }}
+                    >
+                      <ListItemText 
+                        primary={<Typography sx={{ color: isSelected ? 'primary.main' : 'text.primary', fontWeight: isSelected ? 'bold' : 'normal' }}>{a.title}</Typography>}
+                        secondary={<Typography variant="caption" sx={{ color: 'text.secondary' }}>{`${a.yearHint ? (a.yearHint < 0 ? `公元前${Math.abs(a.yearHint)}年` : `${a.yearHint}年`) : '未知年份'} · ${Math.abs(a.lat).toFixed(2)}°${a.lat >= 0 ? 'N' : 'S'}, ${Math.abs(a.lon).toFixed(2)}°${a.lon >= 0 ? 'E' : 'W'}`}</Typography>}
+                      />
+                      {isSelected && (
+                        <ListItemIcon sx={{ minWidth: 'auto', color: 'primary.main' }}>
+                          <Icon>check</Icon>
+                        </ListItemIcon>
+                      )}
+                    </ListItemButton>
+                  );
+                })}
+              </List>
+            </Box>
+          </Collapse>
+        </Paper>
+      </Fade>
     );
   };
 
   const renderContent = () => {
+    const bottomPos = 96; // bottom-24
+    const topPos = isDirectoryVisible ? 172 : 96;
+
     if (searchStatus === 'loading') {
       return (
-        <div className={`${baseCardClasses} flex items-center justify-center animate-in fade-in duration-300`} style={cardStyle}>
-          <div className="flex flex-col items-center gap-4 z-10">
-            <md-circular-progress indeterminate></md-circular-progress>
-            <span className="text-sm text-on-surface-variant">正在扫描历史档案...</span>
-          </div>
-        </div>
+        <Fade in={true} timeout={300}>
+          <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'top 0.3s' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">正在扫描历史档案...</Typography>
+            </Box>
+          </Paper>
+        </Fade>
       );
     }
 
     if (searchStatus === 'empty') {
       return (
-        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300`} style={cardStyle}>
-          <div className="z-10 flex flex-col items-center">
-            <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
-            <h6 className="text-xl font-bold mb-2">未找到记录</h6>
-            <p className="text-sm leading-relaxed text-on-surface-variant">
+        <Fade in={true} timeout={300}>
+          <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center', transition: 'top 0.3s' }}>
+            <Icon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}>search_off</Icon>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>未找到记录</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
-            </p>
-          </div>
-        </div>
+            </Typography>
+          </Paper>
+        </Fade>
       );
     }
 
     if (searchStatus === 'too_large') {
       return (
-        <div className={`${baseCardClasses} flex flex-col items-center justify-center p-6 text-center border-error animate-in fade-in duration-300`} style={cardStyle}>
-          <div className="z-10 flex flex-col items-center">
-            <md-icon style={{ fontSize: 48, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 48, height: 48 }}>search_off</md-icon>
-            <h6 className="text-xl font-bold mb-2 text-primary">视野过大</h6>
-            <p className="text-sm leading-relaxed text-on-surface-variant">
+        <Fade in={true} timeout={300}>
+          <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center', borderColor: 'error.main', transition: 'top 0.3s' }}>
+            <Icon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}>search_off</Icon>
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold', mb: 1 }}>视野过大</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
-            </p>
-          </div>
-        </div>
+            </Typography>
+          </Paper>
+        </Fade>
       );
     }
 
     if (!article) {
       return (
-        <div className={`${baseCardClasses} flex flex-col justify-center p-8 animate-in fade-in duration-300`} style={cardStyle}>
-          <div className="z-10 flex flex-col">
-            <md-icon style={{ fontSize: 40, color: 'var(--md-sys-color-primary)', marginBottom: 16, width: 40, height: 40 }}>travel_explore</md-icon>
-            <h5 className="text-2xl font-bold mb-2">探索世界</h5>
-            <p className="text-sm leading-relaxed text-on-surface-variant">
+        <Fade in={true} timeout={300}>
+          <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', justifyContent: 'center', p: 4, transition: 'top 0.3s' }}>
+            <Icon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }}>travel_explore</Icon>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>探索世界</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
-            </p>
-          </div>
-        </div>
+            </Typography>
+          </Paper>
+        </Fade>
       );
     }
 
     return (
-      <div className={`${baseCardClasses} flex flex-col animate-in fade-in duration-300`} style={cardStyle}>
-        {article.thumbnail && (
-          <div className="relative w-full h-48 shrink-0 z-10">
-            <img
-              src={article.thumbnail}
-              alt={article.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface-container-low" />
-          </div>
-        )}
-        
-        <div className="flex-grow p-0 flex flex-col z-10 overflow-hidden">
-          <div className="px-6 pt-6 pb-2 shrink-0">
-            <div className="flex items-center gap-3 mb-4">
-              <md-assist-chip 
-                label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
-              />
-              <span className="text-xs font-mono text-on-surface-variant">
-                {Math.abs(article.lat).toFixed(2)}°{article.lat >= 0 ? 'N' : 'S'}, {Math.abs(article.lon).toFixed(2)}°{article.lon >= 0 ? 'E' : 'W'}
-              </span>
-            </div>
-            
-            <h5 className="text-2xl font-bold mb-2 text-on-surface">
-              {article.title}
-            </h5>
-          </div>
-            
-          <div className="flex-grow overflow-y-auto px-6">
-            <p className="text-sm leading-relaxed mb-6 text-on-surface-variant">
-              {article.extract}
-            </p>
-          </div>
+      <Fade in={true} timeout={300}>
+        <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', transition: 'top 0.3s' }}>
+          {article.thumbnail && (
+            <Box sx={{ position: 'relative', width: '100%', height: 192, flexShrink: 0 }}>
+              <Box component="img" src={article.thumbnail} alt={article.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, #211F26)' }} />
+            </Box>
+          )}
+          
+          <Box sx={{ flexGrow: 1, p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, pt: 3, pb: 1, flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                <Chip 
+                  label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
+                  size="small"
+                  variant="outlined"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                  {Math.abs(article.lat).toFixed(2)}°{article.lat >= 0 ? 'N' : 'S'}, {Math.abs(article.lon).toFixed(2)}°{article.lon >= 0 ? 'E' : 'W'}
+                </Typography>
+              </Box>
+              
+              <Typography variant="h5" color="text.primary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {article.title}
+              </Typography>
+            </Box>
+              
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, mb: 3 }}>
+                {article.extract}
+              </Typography>
+            </Box>
 
-          <div className="px-6 pb-6 pt-2 shrink-0">
-            <md-filled-button 
-              onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
-              style={{ width: '100%' }}
-            >
-              <md-icon slot="icon">auto_stories</md-icon>
-              在维基百科上阅读全文
-            </md-filled-button>
-          </div>
-        </div>
-      </div>
+            <Box sx={{ px: 3, pb: 3, pt: 1, flexShrink: 0 }}>
+              <Button 
+                variant="contained"
+                fullWidth
+                onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
+                startIcon={<Icon>auto_stories</Icon>}
+              >
+                在维基百科上阅读全文
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      </Fade>
     );
   };
 

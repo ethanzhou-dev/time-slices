@@ -7,8 +7,7 @@ import InfoPanel from './components/InfoPanel';
 import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
-import '@material/web/fab/fab.js';
-import '@material/web/icon/icon.js';
+import { Box, Stack, Fab, Icon, Typography } from '@mui/material';
 
 export default function App() {
   const [articles, setArticles] = useState<WikiArticle[]>([]);
@@ -99,7 +98,7 @@ export default function App() {
   , [articles, selectedArticleId]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-background">
+    <Box sx={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
       
       <EarthMap 
         ref={earthMapRef}
@@ -110,37 +109,36 @@ export default function App() {
       />
 
       {/* Header Overlay */}
-      <div className="absolute top-0 left-0 w-full p-6 flex items-center justify-between z-10 pointer-events-none bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-4 pointer-events-auto">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary shadow-[0_0_15px_rgba(208,188,255,0.5)]">
-            <md-icon style={{ color: 'var(--md-sys-color-on-primary)' }}>public</md-icon>
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight leading-none text-white m-0">
-              Time<span className="text-primary"> Slices</span>
-            </h1>
-            <p className="text-outline font-bold tracking-widest text-xs uppercase m-0 mt-1">
+      <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)' }}>
+        <Stack spacing={2} sx={{ flexDirection: 'row', alignItems: 'center', pointerEvents: 'auto', flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: '50%', bgcolor: 'primary.main', boxShadow: '0 0 15px rgba(208,188,255,0.5)' }}>
+            <Icon sx={{ color: 'primary.contrastText' }}>public</Icon>
+          </Box>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.025em', lineHeight: 1, color: 'white', m: 0 }}>
+              Time<Box component="span" sx={{ color: 'primary.main' }}> Slices</Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'divider', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', mt: 0.5 }}>
               历史地图
-            </p>
-          </div>
-        </div>
+            </Typography>
+          </Box>
+        </Stack>
 
         {/* Compass Button - 指南针 */}
-        <div className="pointer-events-auto">
-          <md-fab
+        <Box sx={{ pointerEvents: 'auto' }}>
+          <Fab
             size="small"
-            variant="secondary"
+            color="secondary"
             aria-label="指南针 - 点击回正朝北"
             onClick={handleResetNorth}
           >
-            <md-icon
+            <Icon
               ref={compassIconRef as any}
-              slot="icon"
-              style={{ transform: 'rotate(-45deg)' }}
-            >explore</md-icon>
-          </md-fab>
-        </div>
-      </div>
+              sx={{ transform: 'rotate(-45deg)' }}
+            >explore</Icon>
+          </Fab>
+        </Box>
+      </Box>
 
       {/* Left Info Panel */}
       <InfoPanel 
@@ -160,18 +158,19 @@ export default function App() {
       )}
 
       {/* Floating Scan Button */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
-        <md-fab 
-          variant="primary"
-          style={{ '--md-fab-label-text-tracking': '0.1px' } as any}
-          label={searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
+      <Box sx={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+        <Fab 
+          variant="extended"
+          color="primary"
           onClick={handleScanViewport}
-          disabled={searchStatus === 'loading' || undefined}
+          disabled={searchStatus === 'loading'}
+          sx={{ letterSpacing: '0.1px' }}
         >
-          <md-icon slot="icon">search</md-icon>
-        </md-fab>
-      </div>
+          <Icon sx={{ mr: 1 }}>search</Icon>
+          {searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
+        </Fab>
+      </Box>
 
-    </div>
+    </Box>
   );
 }

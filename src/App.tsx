@@ -109,6 +109,24 @@ export default function App() {
             </p>
           </div>
         </div>
+
+        {/* Compass Button - 指南针 */}
+        <div className="pointer-events-auto">
+          <md-fab
+            size="small"
+            variant="secondary"
+            aria-label="指南针 - 点击回正朝北"
+            onClick={handleResetNorth}
+          >
+            <md-icon
+              slot="icon"
+              style={{
+                transform: `rotate(${-cameraHeading}deg)`,
+                transition: 'transform 0.3s ease-out'
+              }}
+            >explore</md-icon>
+          </md-fab>
+        </div>
       </div>
 
       {/* Left Info Panel */}
@@ -138,24 +156,6 @@ export default function App() {
           disabled={searchStatus === 'loading' || undefined}
         >
           <md-icon slot="icon">search</md-icon>
-        </md-fab>
-      </div>
-
-      {/* Compass Button - 指南针 */}
-      <div className="absolute bottom-6 right-6 z-10">
-        <md-fab
-          size="small"
-          variant="surface"
-          aria-label="指南针 - 点击回正朝北"
-          onClick={handleResetNorth}
-        >
-          <md-icon
-            slot="icon"
-            style={{
-              transform: `rotate(${-cameraHeading}deg)`,
-              transition: 'transform 0.3s ease-out'
-            }}
-          >explore</md-icon>
         </md-fab>
       </div>
 

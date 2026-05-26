@@ -66,7 +66,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
                     {a.title}
                   </div>
                   <div slot="supporting-text" className="text-xs">
-                    {a.yearHint ? (a.yearHint < 0 ? `公元前${Math.abs(a.yearHint)}年` : `${a.yearHint}年`) : '未知年份'} · {(a.distance / 1000).toFixed(1)}km
+                    {a.yearHint ? (a.yearHint < 0 ? `公元前${Math.abs(a.yearHint)}年` : `${a.yearHint}年`) : '未知年份'} · {Math.abs(a.lat).toFixed(2)}°{a.lat >= 0 ? 'N' : 'S'}, {Math.abs(a.lon).toFixed(2)}°{a.lon >= 0 ? 'E' : 'W'}
                   </div>
                   <md-icon slot="end" style={{ opacity: a.pageid === article?.pageid ? 1 : 0, color: 'var(--md-sys-color-primary)' }}>
                     check
@@ -154,7 +154,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
                 label={article.yearHint ? (article.yearHint < 0 ? `约公元前${Math.abs(article.yearHint)}年` : `约${article.yearHint}年`) : '历史遗迹'} 
               />
               <span className="text-xs font-mono text-on-surface-variant">
-                距离 {(article.distance / 1000).toFixed(1)} km
+                {Math.abs(article.lat).toFixed(2)}°{article.lat >= 0 ? 'N' : 'S'}, {Math.abs(article.lon).toFixed(2)}°{article.lon >= 0 ? 'E' : 'W'}
               </span>
             </div>
             

@@ -5,7 +5,6 @@ export interface WikiArticle {
   thumbnail?: string;
   lat: number;
   lon: number;
-  distance: number;
   yearHint?: number;
 }
 
@@ -79,7 +78,6 @@ export async function fetchArticlesInBounds(north: number, west: number, south: 
             thumbnail: detail.thumbnail?.source,
             lat: page.lat,
             lon: page.lon,
-            distance: page.dist || 0,
             yearHint
           });
         }

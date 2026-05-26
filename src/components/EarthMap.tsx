@@ -1,5 +1,6 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle, memo } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, memo, useState, useCallback } from 'react';
 import * as Cesium from 'cesium';
+import Supercluster from 'supercluster';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import '@material/web/fab/fab.js';
@@ -21,9 +22,9 @@ interface EarthMapProps {
 const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, selectedArticleId, onArticleClick, onHeadingChange }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
-  const markerRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const markerRefs = useRef<Record<string, HTMLDivElement | null>>({});
   // 性能优化：预计算缓存，避免每帧分配新对象
-  const cachedPositionsRef = useRef<Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>>(new Map());
+  const cachedPositionsRef = useRef<Map<string, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>>(new Map());
   const scratchCartesian = useRef(new Cesium.Cartesian3());
   // 性能优化：用 ref 持有最新的回调，使 Cesium 事件处理器无需重建
   const onArticleClickRef = useRef(onArticleClick);
@@ -31,6 +32,27 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
   const onHeadingChangeRef = useRef(onHeadingChange);
   onHeadingChangeRef.current = onHeadingChange;
   const lastHeadingRef = useRef(-1);
+
+  const superclusterRef = useRef<Supercluster | null>(null);
+  const [clusters, setClusters] = useState<Array<any>>([]);
+  const currentZoomRef = useRef(0);
+
+  const updateClusters = useCallback(() => {
+    const sc = superclusterRef.current;
+    const viewer = viewerRef.current;
+    if (!sc || !viewer) return;
+    
+    const height = viewer.camera.positionCartographic.height;
+    // zoom level roughly maps to height: zoom 0 ~ 20,000,000m, each zoom level halves the height
+    let zoom = Math.round(Math.log2(20000000 / height));
+    zoom = Math.max(0, Math.min(zoom, 20));
+    currentZoomRef.current = zoom;
+
+    // Use a global bounding box for simplicity since max points is ~500
+    const activeClusters = sc.getClusters([-180, -85, 180, 85], zoom);
+    setClusters(activeClusters);
+  }, []);
+
 
   useImperativeHandle(ref, () => ({
     getViewportBounds: () => {
@@ -122,6 +144,10 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       // 性能优化：禁用 MSAA 抗锯齿（对 2D 地图瓦片收益极小，但 GPU 开销明显）
       viewer.scene.msaaSamples = 1;
 
+      // 监听相机的移动来更新聚类
+      viewer.camera.percentageChanged = 0.05; // 5%的视角变化就触发
+      viewer.camera.changed.addEventListener(updateClusters);
+
       // Handle Map Clicks
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction((click: any) => {
@@ -164,21 +190,45 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
     };
   }, []);
 
-  // 性能优化：articles 变化时一次性预计算所有 Cartesian3 坐标和地表法线，缓存到 Map 中
+  // 当文章数据更新时，初始化 Supercluster
+  useEffect(() => {
+    const sc = new Supercluster({
+      radius: 60,
+      maxZoom: 20,
+    });
+    
+    const points = articles.map(a => ({
+      type: 'Feature' as const,
+      properties: { ...a, isCluster: false },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [a.lon, a.lat]
+      }
+    }));
+    
+    sc.load(points);
+    superclusterRef.current = sc;
+    updateClusters(); // 立即计算一次当前的 clusters
+  }, [articles, updateClusters]);
+
+  // 性能优化：clusters 变化时一次性预计算所有 Cartesian3 坐标和地表法线，缓存到 Map 中
   // 避免在每帧的 preRender 回调中反复 new Cesium.Cartesian3()，消除 GC 压力
   useEffect(() => {
-    const cache = new Map<number, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>();
-    articles.forEach(a => {
-      const cartesian = Cesium.Cartesian3.fromDegrees(a.lon, a.lat);
+    const cache = new Map<string, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>();
+    clusters.forEach(c => {
+      const id = c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+      const lon = c.geometry.coordinates[0];
+      const lat = c.geometry.coordinates[1];
+      const cartesian = Cesium.Cartesian3.fromDegrees(lon, lat);
       const normal = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cartesian, new Cesium.Cartesian3());
-      cache.set(a.pageid, { cartesian, normal });
+      cache.set(id, { cartesian, normal });
     });
     cachedPositionsRef.current = cache;
-  }, [articles]);
+  }, [clusters]);
 
   // 动态更新 HTML 标记点位置
   useEffect(() => {
-    if (!viewerRef.current || articles.length === 0) return;
+    if (!viewerRef.current || clusters.length === 0) return;
     const viewer = viewerRef.current;
 
     // 清除旧的实体
@@ -188,11 +238,12 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       const cache = cachedPositionsRef.current;
       const scratch = scratchCartesian.current;
 
-      articles.forEach(a => {
-        const el = markerRefs.current[a.pageid];
+      clusters.forEach(c => {
+        const id = c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+        const el = markerRefs.current[id];
         if (!el) return;
 
-        const cached = cache.get(a.pageid);
+        const cached = cache.get(id);
         if (!cached) return;
 
         // 检查点是否在地球背面（地平线剔除）
@@ -230,7 +281,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
     return () => {
       viewer.scene.preRender.removeEventListener(updatePositions);
     };
-  }, [articles]);
+  }, [clusters]);
 
   return (
     <div className="absolute inset-0 w-full h-full bg-black overflow-hidden relative">
@@ -238,13 +289,48 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       
       {/* HTML Markers Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
-        {articles.map(a => {
+        {clusters.map(c => {
+          const isCluster = c.properties.cluster;
+          const id = isCluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+          
+          if (isCluster) {
+            const pointCount = c.properties.point_count;
+            return (
+              <div 
+                key={id}
+                ref={(el: HTMLDivElement | null) => { markerRefs.current[id] = el; }}
+                className="absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group z-30"
+              >
+                <div 
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer pointer-events-auto transition-transform hover:scale-110"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!viewerRef.current || !superclusterRef.current) return;
+                    const expansionZoom = superclusterRef.current.getClusterExpansionZoom(c.properties.cluster_id);
+                    const lon = c.geometry.coordinates[0];
+                    const lat = c.geometry.coordinates[1];
+                    const height = 20000000 / Math.pow(2, expansionZoom);
+                    viewerRef.current.camera.flyTo({
+                      destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.max(height, 5000)),
+                      duration: 1.0,
+                    });
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-[0_4px_12px_rgba(0,0,0,0.3)] flex items-center justify-center text-sm font-bold border-2 border-[var(--md-sys-color-surface)]">
+                    {pointCount}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          
+          const a = c.properties;
           const isSelected = selectedArticleId === a.pageid;
           
           return (
             <div 
-              key={a.pageid}
-              ref={(el: HTMLDivElement | null) => { markerRefs.current[a.pageid] = el; }}
+              key={id}
+              ref={(el: HTMLDivElement | null) => { markerRefs.current[id] = el; }}
               className={`absolute top-0 left-0 transition-opacity duration-150 opacity-0 pointer-events-none group ${isSelected ? 'z-50' : 'z-10'}`}
             >
               {/* Marker Icon 容器（原点对齐到底部中心） */}

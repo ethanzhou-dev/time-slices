@@ -48,8 +48,35 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
     zoom = Math.max(0, Math.min(zoom, 20));
     currentZoomRef.current = zoom;
 
-    // Use a global bounding box for simplicity since max points is ~500
-    const activeClusters = sc.getClusters([-180, -85, 180, 85], zoom);
+    let bbox: [number, number, number, number] = [-180, -85, 180, 85];
+    const rect = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid, new Cesium.Rectangle());
+    
+    if (rect) {
+      const west = Math.max(-180, Cesium.Math.toDegrees(rect.west) - 5);
+      const south = Math.max(-85, Cesium.Math.toDegrees(rect.south) - 5);
+      const east = Math.min(180, Cesium.Math.toDegrees(rect.east) + 5);
+      const north = Math.min(85, Cesium.Math.toDegrees(rect.north) + 5);
+      
+      // 避免跨越 180 度经线时的错误包围盒
+      if (west < east) {
+        bbox = [west, south, east, north];
+      }
+    } else if (zoom > 5) {
+      // 当无法计算包围盒（例如平视地平线）但层级较深时，使用相机中心点生成一个估算的包围盒
+      const center = viewer.camera.positionCartographic;
+      const centerLon = Cesium.Math.toDegrees(center.longitude);
+      const centerLat = Cesium.Math.toDegrees(center.latitude);
+      const span = 180 / Math.pow(2, Math.max(0, zoom - 3)); // 估算视野范围
+      
+      bbox = [
+        Math.max(-180, centerLon - span),
+        Math.max(-85, centerLat - span),
+        Math.min(180, centerLon + span),
+        Math.min(85, centerLat + span)
+      ];
+    }
+
+    const activeClusters = sc.getClusters(bbox, zoom);
     setClusters(activeClusters);
   }, []);
 

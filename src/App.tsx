@@ -110,7 +110,7 @@ export default function App() {
 
       {/* Header Overlay */}
       <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)' }}>
-        <Stack spacing={2} sx={{ flexDirection: 'row', alignItems: 'center', pointerEvents: 'auto', flexGrow: 1 }}>
+        <Stack direction="row" spacing={3} sx={{ alignItems: 'center', pointerEvents: 'auto', flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: '50%', bgcolor: 'primary.main', boxShadow: '0 0 15px rgba(208,188,255,0.5)' }}>
             <Icon sx={{ color: 'primary.contrastText' }}>public</Icon>
           </Box>

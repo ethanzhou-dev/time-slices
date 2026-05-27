@@ -80,11 +80,9 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
         >
           {/* Nodes */}
           <Stack ref={containerRef} spacing={3} sx={{ width: '100%', position: 'relative', zIndex: 10, py: 2 }}>
-            {/* Vertical Track Line */}
-            <Box sx={{ position: 'absolute', right: 20, top: 16, bottom: 16, width: 4, transform: 'translateX(50%)', bgcolor: 'divider', borderRadius: 2, zIndex: -1 }} />
-            
             {nodes.map((node, index) => {
               const isActive = index === activeIndex;
+              const isLast = index === nodes.length - 1;
               return (
                 <Box
                   key={node.id}
@@ -109,6 +107,20 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
                     }
                   }}
                 >
+                  {!isLast && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        right: 20,
+                        top: '50%',
+                        width: 4,
+                        height: 'calc(100% + 24px)',
+                        transform: 'translateX(50%)',
+                        bgcolor: 'divider',
+                        zIndex: -1,
+                      }}
+                    />
+                  )}
                   <Typography
                     className="timeline-label"
                     sx={{

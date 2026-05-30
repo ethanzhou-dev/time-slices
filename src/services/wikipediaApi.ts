@@ -15,9 +15,11 @@ export interface WikiScanResult {
   data: WikiArticle[];
 }
 
+const BASE_URL = import.meta.env.DEV ? 'https://zh.wikipedia.org/w/api.php' : '/api/wikipedia';
+
 export async function fetchArticlesInBounds(north: number, west: number, south: number, east: number): Promise<WikiScanResult> {
   try {
-    const geoUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gsbbox=${north}|${west}|${south}|${east}&gslimit=100&format=json&origin=*`;
+    const geoUrl = `${BASE_URL}?action=query&list=geosearch&gsbbox=${north}|${west}|${south}|${east}&gslimit=100&format=json&origin=*`;
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
     
@@ -44,7 +46,7 @@ export async function fetchArticlesInBounds(north: number, west: number, south: 
     // 性能优化：并行发送所有分块请求，而非串行等待
     const chunkResults = await Promise.all(chunks.map(async (chunk) => {
       const chunkIds = chunk.map((p: any) => p.pageid).join('|');
-      const detailsUrl = `https://zh.wikipedia.org/w/api.php?action=query&pageids=${chunkIds}&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&pithumbsize=400&format=json&origin=*`;
+      const detailsUrl = `${BASE_URL}?action=query&pageids=${chunkIds}&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&pithumbsize=400&format=json&origin=*`;
       const detailsRes = await fetch(detailsUrl);
       const detailsData = await detailsRes.json();
       return { chunk, pageMap: detailsData.query.pages };

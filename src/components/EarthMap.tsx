@@ -207,14 +207,34 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       maxZoom: 20,
     });
     
-    const points = articles.map(a => ({
-      type: 'Feature' as const,
-      properties: { ...a, isCluster: false },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [a.lon, a.lat]
+    const coordMap = new Map<string, number>();
+    
+    const points = articles.map(a => {
+      // 取前5位小数（约等于 1.1 米精度）作为坐标指纹
+      const key = `${a.lon.toFixed(5)},${a.lat.toFixed(5)}`;
+      const count = coordMap.get(key) || 0;
+      coordMap.set(key, count + 1);
+      
+      let lon = a.lon;
+      let lat = a.lat;
+      
+      // 如果发现坐标完全一样（或者极近），以原始点为中心，做一个花瓣状/螺旋状散开微调
+      if (count > 0) {
+        const angle = count * (Math.PI * 2 / 8); // 每 8 个点绕一圈
+        const radius = 0.00015 + Math.floor((count - 1) / 8) * 0.0001; // 约 15 米的半径，圈数越多半径越大
+        lon += Math.cos(angle) * radius;
+        lat += Math.sin(angle) * radius;
       }
-    }));
+
+      return {
+        type: 'Feature' as const,
+        properties: { ...a, isCluster: false },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [lon, lat]
+        }
+      };
+    });
     
     sc.load(points);
     superclusterRef.current = sc;

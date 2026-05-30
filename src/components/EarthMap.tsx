@@ -33,7 +33,17 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
   const lastHeadingRef = useRef(-1);
 
   const superclusterRef = useRef<Supercluster | null>(null);
-  const [clusters, setClusters] = useState<Array<any>>([]);
+  type MapCluster = {
+    geometry: { coordinates: number[] };
+    properties: Record<string, unknown> & {
+      cluster?: boolean;
+      cluster_id?: number;
+      point_count?: number;
+      pageid?: number;
+      title?: string;
+    };
+  };
+  const [clusters, setClusters] = useState<MapCluster[]>([]);
   const currentZoomRef = useRef(0);
 
   const updateClusters = useCallback(() => {
@@ -50,7 +60,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
 
     // Use a global bounding box for simplicity since max points is ~500
     const activeClusters = sc.getClusters([-180, -85, 180, 85], zoom);
-    setClusters(activeClusters);
+    setClusters(activeClusters as MapCluster[]);
   }, []);
 
 
@@ -150,7 +160,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
 
       // Handle Map Clicks
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-      handler.setInputAction((click: any) => {
+      handler.setInputAction((click: { position: Cesium.Cartesian2 }) => {
         const pickedObject = viewer.scene.pick(click.position);
         if (Cesium.defined(pickedObject) && pickedObject.id) {
           if (pickedObject.id.name) {
@@ -188,7 +198,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
         viewerRef.current = null;
       }
     };
-  }, []);
+  }, [updateClusters]);
 
   // 当文章数据更新时，初始化 Supercluster
   useEffect(() => {
@@ -216,7 +226,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
   useEffect(() => {
     const cache = new Map<string, { cartesian: Cesium.Cartesian3; normal: Cesium.Cartesian3 }>();
     clusters.forEach(c => {
-      const id = c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+      const id = String(c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid);
       const lon = c.geometry.coordinates[0];
       const lat = c.geometry.coordinates[1];
       const cartesian = Cesium.Cartesian3.fromDegrees(lon, lat);
@@ -239,7 +249,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       const scratch = scratchCartesian.current;
 
       clusters.forEach(c => {
-        const id = c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+        const id = String(c.properties.cluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid);
         const el = markerRefs.current[id];
         if (!el) return;
 
@@ -291,7 +301,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
         {clusters.map(c => {
           const isCluster = c.properties.cluster;
-          const id = isCluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid;
+          const id = String(isCluster ? `cluster-${c.properties.cluster_id}` : c.properties.pageid);
           
           if (isCluster) {
             const pointCount = c.properties.point_count;
@@ -307,7 +317,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!viewerRef.current || !superclusterRef.current) return;
-                    const expansionZoom = superclusterRef.current.getClusterExpansionZoom(c.properties.cluster_id);
+                    const expansionZoom = superclusterRef.current.getClusterExpansionZoom(c.properties.cluster_id as number);
                     const lon = c.geometry.coordinates[0];
                     const lat = c.geometry.coordinates[1];
                     const height = 20000000 / Math.pow(2, expansionZoom);
@@ -355,7 +365,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                 sx={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', pointerEvents: 'auto' }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onArticleClick(a.pageid);
+                  onArticleClick(a.pageid as number);
                 }}
               >
                 <Box className={isSelected ? '' : 'marker-target'} sx={{ position: 'relative', transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', transformOrigin: 'bottom', transform: isSelected ? 'scale(1.1)' : 'scale(0.75)', opacity: isSelected ? 1 : 0.9 }}>
@@ -380,7 +390,7 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                 sx={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', mt: 0.75, cursor: 'pointer', pointerEvents: 'auto' }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onArticleClick(a.pageid);
+                  onArticleClick(a.pageid as number);
                 }}
               >
                 <Paper

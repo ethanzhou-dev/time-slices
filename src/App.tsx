@@ -14,7 +14,7 @@ export default function App() {
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
   const earthMapRef = useRef<EarthMapRef>(null);
-  const compassIconRef = useRef<HTMLElement>(null);
+  const compassIconRef = useRef<HTMLSpanElement>(null);
   const currentRotationRef = useRef(0);
 
   const timelineNodes = useMemo<TimelineNode[]>(() => {
@@ -133,7 +133,7 @@ export default function App() {
             onClick={handleResetNorth}
           >
             <Icon
-              ref={compassIconRef as any}
+              ref={compassIconRef}
               sx={{ transform: 'rotate(-45deg)' }}
             >explore</Icon>
           </Fab>

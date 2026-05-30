@@ -22,7 +22,7 @@ export async function onRequest(context) {
     newResponse.headers.set('Access-Control-Allow-Origin', '*');
     
     return newResponse;
-  } catch (error) {
+  } catch {
     return new Response(JSON.stringify({ error: 'Proxy fetch failed' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

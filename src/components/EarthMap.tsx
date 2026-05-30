@@ -320,9 +320,20 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                     const expansionZoom = superclusterRef.current.getClusterExpansionZoom(c.properties.cluster_id as number);
                     const lon = c.geometry.coordinates[0];
                     const lat = c.geometry.coordinates[1];
-                    const height = 20000000 / Math.pow(2, expansionZoom);
+                    // 使用与 updateClusters 一致的公式，防止高度计算错误
+                    let targetHeight = 150000000 / Math.pow(2, expansionZoom);
+                    
+                    // 确保点击聚合点总是放大（高度降低），避免因为 clamped 或者算法误差导致缩放反弹（缩小屏幕）
+                    const currentHeight = viewerRef.current.camera.positionCartographic.height;
+                    if (targetHeight >= currentHeight) {
+                      targetHeight = currentHeight * 0.5; // 如果计算结果没有放大，强制放大一倍
+                    }
+                    
+                    // 最低限制设为 200 米，防止钻入地下
+                    targetHeight = Math.max(targetHeight, 200);
+
                     viewerRef.current.camera.flyTo({
-                      destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.max(height, 5000)),
+                      destination: Cesium.Cartesian3.fromDegrees(lon, lat, targetHeight),
                       duration: 0.5,
                     });
                   }}

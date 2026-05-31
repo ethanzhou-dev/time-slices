@@ -24,6 +24,7 @@ export default defineConfig({
     }),
   ],
   esbuild: {
+    // @ts-ignore: drop is supported by esbuild but may not be in Vite's type definitions
     drop: ['console', 'debugger'],
   },
   build: {

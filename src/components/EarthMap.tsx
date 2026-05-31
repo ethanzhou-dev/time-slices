@@ -158,20 +158,6 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
       viewer.camera.percentageChanged = 0.05; // 5%的视角变化就触发
       viewer.camera.changed.addEventListener(updateClusters);
 
-      // Handle Map Clicks
-      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-      handler.setInputAction((click: { position: Cesium.Cartesian2 }) => {
-        const pickedObject = viewer.scene.pick(click.position);
-        if (Cesium.defined(pickedObject) && pickedObject.id) {
-          if (pickedObject.id.name) {
-            const pageId = parseInt(pickedObject.id.name);
-            if (!isNaN(pageId)) {
-              onArticleClickRef.current(pageId);
-              return;
-            }
-          }
-        }
-      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
       viewerRef.current = viewer;
 

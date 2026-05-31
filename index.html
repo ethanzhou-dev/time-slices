@@ -76,13 +76,26 @@
           100% { left: 107%; right: -8%; }
         }
       </style>
-      <div class="splash-screen">
+      <div class="splash-screen" id="splash" style="opacity: 0; transition: opacity 0.1s ease-out;">
         <div class="splash-title">Time<span> Slices</span></div>
         <div class="mui-linear-progress">
           <div class="mui-linear-progress-bar1"></div>
           <div class="mui-linear-progress-bar2"></div>
         </div>
       </div>
+      <script>
+        // Wait for Roboto font to load before showing anything, 
+        // guaranteeing progress bar and text appear at the exact same time without any jump.
+        document.fonts.ready.then(function() {
+          var splash = document.getElementById('splash');
+          if (splash) splash.style.opacity = 1;
+        });
+        // Fallback in case font loading takes too long or fails
+        setTimeout(function() {
+          var splash = document.getElementById('splash');
+          if (splash) splash.style.opacity = 1;
+        }, 300);
+      </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

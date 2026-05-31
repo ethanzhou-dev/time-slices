@@ -8,7 +8,78 @@
     <title>Time Slices — 历史地图</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        body {
+          margin: 0;
+          background-color: #141218; /* same as MUI dark theme background.default */
+        }
+        .splash-screen {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+        }
+        .splash-title {
+          color: white;
+          font-size: 24px;
+          font-weight: 900;
+          letter-spacing: -0.025em;
+          margin-bottom: 24px;
+        }
+        .splash-title span {
+          color: #D0BCFF; /* same as MUI primary.main */
+        }
+        /* MUI LinearProgress Indeterminate Replica */
+        .mui-linear-progress {
+          position: relative;
+          overflow: hidden;
+          display: block;
+          height: 4px;
+          width: 200px;
+          border-radius: 2px;
+          background-color: rgba(208, 188, 255, 0.24);
+        }
+        .mui-linear-progress-bar1, .mui-linear-progress-bar2 {
+          width: 100%;
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          top: 0;
+          transition: transform 0.2s linear;
+          transform-origin: left;
+          background-color: #D0BCFF;
+        }
+        .mui-linear-progress-bar1 {
+          width: auto;
+          animation: mui-linear-1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        }
+        .mui-linear-progress-bar2 {
+          width: auto;
+          animation: mui-linear-2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite;
+        }
+        @keyframes mui-linear-1 {
+          0% { left: -35%; right: 100%; }
+          60% { left: 100%; right: -90%; }
+          100% { left: 100%; right: -90%; }
+        }
+        @keyframes mui-linear-2 {
+          0% { left: -200%; right: 100%; }
+          60% { left: 107%; right: -8%; }
+          100% { left: 107%; right: -8%; }
+        }
+      </style>
+      <div class="splash-screen">
+        <div class="splash-title">Time<span> Slices</span></div>
+        <div class="mui-linear-progress">
+          <div class="mui-linear-progress-bar1"></div>
+          <div class="mui-linear-progress-bar2"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -7,14 +7,17 @@ import InfoPanel from './components/InfoPanel';
 import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
-import { Box, Stack, Fab, Icon, Typography } from '@mui/material';
+import { Box, Stack, Fab, Typography } from '@mui/material';
+import PublicIcon from '@mui/icons-material/Public';
+import ExploreIcon from '@mui/icons-material/Explore';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function App() {
   const [articles, setArticles] = useState<WikiArticle[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
   const earthMapRef = useRef<EarthMapRef>(null);
-  const compassIconRef = useRef<HTMLSpanElement>(null);
+  const compassIconRef = useRef<SVGSVGElement>(null);
   const currentRotationRef = useRef(0);
 
   const timelineNodes = useMemo<TimelineNode[]>(() => {
@@ -112,7 +115,7 @@ export default function App() {
       <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)' }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: 'center', pointerEvents: 'auto', flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: '50%', bgcolor: 'primary.main', boxShadow: '0 0 15px rgba(208,188,255,0.5)' }}>
-            <Icon sx={{ color: 'primary.contrastText' }}>public</Icon>
+            <PublicIcon sx={{ color: 'primary.contrastText' }} />
           </Box>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.025em', lineHeight: 1, color: 'white', m: 0 }}>
@@ -132,10 +135,10 @@ export default function App() {
             aria-label="指南针 - 点击回正朝北"
             onClick={handleResetNorth}
           >
-            <Icon
+            <ExploreIcon
               ref={compassIconRef}
               sx={{ transform: 'rotate(-45deg)' }}
-            >explore</Icon>
+            />
           </Fab>
         </Box>
       </Box>
@@ -166,7 +169,7 @@ export default function App() {
           disabled={searchStatus === 'loading'}
           sx={{ letterSpacing: '0.1px' }}
         >
-          <Icon sx={{ mr: 1 }}>search</Icon>
+          <SearchIcon sx={{ mr: 1 }} />
           {searchStatus === 'loading' ? '正在扫描...' : '扫描当前屏幕区域'}
         </Fab>
       </Box>

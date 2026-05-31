@@ -1,6 +1,12 @@
 import { useState, memo } from 'react';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
-import { Box, Paper, CircularProgress, Typography, Icon, Chip, Button, List, ListItemButton, ListItemText, ListItemIcon, Collapse, Fade } from '@mui/material';
+import { Box, Paper, CircularProgress, Typography, Chip, Button, List, ListItemButton, ListItemText, ListItemIcon, Collapse, Fade } from '@mui/material';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckIcon from '@mui/icons-material/Check';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
+import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 
 interface InfoPanelProps {
   article: WikiArticle | null;
@@ -46,12 +52,10 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Icon>format_list_bulleted</Icon>
+              <FormatListBulletedIcon />
               <Typography variant="body2" sx={{ fontWeight: 'bold' }}>扫描结果目录 ({articles.length})</Typography>
             </Box>
-            <Icon sx={{ color: 'text.secondary', transform: directoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
-              expand_more
-            </Icon>
+            <ExpandMoreIcon sx={{ color: 'text.secondary', transform: directoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
           </Button>
           
           <Collapse in={directoryOpen} timeout="auto" unmountOnExit>
@@ -74,7 +78,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
                       />
                       {isSelected && (
                         <ListItemIcon sx={{ minWidth: 'auto', color: 'primary.main' }}>
-                          <Icon>check</Icon>
+                          <CheckIcon />
                         </ListItemIcon>
                       )}
                     </ListItemButton>
@@ -109,7 +113,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
       return (
         <Fade in={true} timeout={300}>
           <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center', transition: 'top 0.3s' }}>
-            <Icon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}>search_off</Icon>
+            <SearchOffIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>未找到记录</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               我们在该地点方圆 10 公里内未找到重大历史记录。请尝试点击靠近已知历史名城或地标的位置。
@@ -123,7 +127,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
       return (
         <Fade in={true} timeout={300}>
           <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center', borderColor: 'error.main', transition: 'top 0.3s' }}>
-            <Icon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}>search_off</Icon>
+            <SearchOffIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold', mb: 1 }}>视野过大</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               当前屏幕显示的物理范围超过了 10 公里，维基百科接口限制无法一次性扫描如此广阔的区域。请放大地图（滚动鼠标滚轮）至具体城市或街区后，再次点击扫描。
@@ -137,7 +141,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
       return (
         <Fade in={true} timeout={300}>
           <Paper sx={{ ...paperSx, bottom: bottomPos, top: topPos, display: 'flex', flexDirection: 'column', justifyContent: 'center', p: 4, transition: 'top 0.3s' }}>
-            <Icon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }}>travel_explore</Icon>
+            <TravelExploreIcon sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>探索世界</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
               移动和缩放地图，找到你感兴趣的区域，然后点击底部的“扫描当前屏幕区域”按钮，即可发现该区域的历史事件。
@@ -186,7 +190,7 @@ const InfoPanel = memo(function InfoPanel({ article, articles = [], onArticleCli
                 variant="contained"
                 fullWidth
                 onClick={() => window.open(`https://zh.wikipedia.org/?curid=${article.pageid}`, '_blank')}
-                startIcon={<Icon>auto_stories</Icon>}
+                startIcon={<AutoStoriesIcon />}
               >
                 在维基百科上阅读全文
               </Button>

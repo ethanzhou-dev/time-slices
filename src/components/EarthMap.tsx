@@ -3,7 +3,8 @@ import * as Cesium from 'cesium';
 import Supercluster from 'supercluster';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
-import { Fab, Icon, Paper, Box } from '@mui/material';
+import { Fab, Paper, Box } from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import type { WikiArticle } from '../services/wikipediaApi';
 
 export interface EarthMapRef {
@@ -440,11 +441,11 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
                 <Box className={isSelected ? '' : 'marker-target'} sx={{ position: 'relative', transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', transformOrigin: 'bottom', transform: isSelected ? 'scale(1.1)' : 'scale(0.75)', opacity: isSelected ? 1 : 0.9 }}>
                   {isSelected ? (
                     <Fab size="small" color="primary" sx={{ pointerEvents: 'none', width: 40, height: 40, minHeight: 40 }}>
-                      <Icon>location_on</Icon>
+                      <LocationOnIcon />
                     </Fab>
                   ) : (
                     <Fab size="small" color="secondary" sx={{ pointerEvents: 'none', width: 40, height: 40, minHeight: 40 }}>
-                      <Icon>location_on</Icon>
+                      <LocationOnIcon />
                     </Fab>
                   )}
                   {/* 底部三角形指示器 (选中的才有) */}

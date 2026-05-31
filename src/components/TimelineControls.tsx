@@ -1,5 +1,7 @@
 import { useEffect, useRef, memo } from 'react';
-import { Box, Stack, IconButton, Icon, Fade, Paper, Typography } from '@mui/material';
+import { Box, Stack, IconButton, Fade, Paper, Typography } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export interface TimelineNode {
   id: number;
@@ -62,7 +64,7 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
           disabled={activeIndex <= 0}
           sx={{ mb: 1, flexShrink: 0 }}
         >
-          <Icon>keyboard_arrow_up</Icon>
+          <KeyboardArrowUpIcon />
         </IconButton>
 
         <Box 
@@ -167,7 +169,7 @@ const TimelineControls = memo(function TimelineControls({ nodes, activeIndex, on
           disabled={activeIndex === nodes.length - 1}
           sx={{ mt: 1, flexShrink: 0 }}
         >
-          <Icon>keyboard_arrow_down</Icon>
+          <KeyboardArrowDownIcon />
         </IconButton>
       </Paper>
     </Fade>

@@ -1,6 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
+import '@fontsource/roboto/300.css'
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
 import './index.css'
 import App from './App.tsx'
 
@@ -32,11 +36,6 @@ const darkTheme = createTheme({
     borderRadius: 16, // md-sys-shape-corner-large
   },
   components: {
-    MuiIcon: {
-      defaultProps: {
-        baseClassName: 'material-symbols-outlined',
-      },
-    },
     MuiButton: {
       styleOverrides: {
         root: {

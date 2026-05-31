@@ -8,6 +8,16 @@ export default defineConfig({
   plugins: [
     react(),
     cesium(),
+    {
+      name: 'defer-cesium-script',
+      enforce: 'post',
+      transformIndexHtml(html) {
+        return html.replace(
+          '<script src="/cesium/Cesium.js"></script>',
+          '<script src="/cesium/Cesium.js" defer></script>'
+        );
+      }
+    },
     viteCompression({
       verbose: true,
       disable: false,

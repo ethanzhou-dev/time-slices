@@ -299,6 +299,62 @@ const EarthMap = memo(forwardRef<EarthMapRef, EarthMapProps>(({ articles, select
     };
   }, [clusters]);
 
+  // 监听 selectedArticleId 变化，自动飞行到对应坐标
+  useEffect(() => {
+    if (!viewerRef.current || !superclusterRef.current || selectedArticleId === null) return;
+    
+    const targetArticle = articles.find(a => a.pageid === selectedArticleId);
+    if (!targetArticle) return;
+
+    const viewer = viewerRef.current;
+    const sc = superclusterRef.current;
+    
+    const currentHeight = viewer.camera.positionCartographic.height;
+    const currentZoom = currentZoomRef.current;
+    
+    // 寻找目标点正好分开为独立点的最小层级
+    let targetZoom = currentZoom;
+    let foundAsLeaf = false;
+    
+    for (; targetZoom <= 20; targetZoom++) {
+      const clustersAtZ = sc.getClusters([-180, -85, 180, 85], targetZoom);
+      if (clustersAtZ.some(c => !c.properties.cluster && c.properties.pageid === selectedArticleId)) {
+        foundAsLeaf = true;
+        break;
+      }
+    }
+    
+    if (!foundAsLeaf) {
+      targetZoom = 20;
+    }
+
+    let targetHeight;
+    if (targetZoom === currentZoom) {
+      // 如果当前层级下已经是独立点，保持当前高度，或者如果太高的话稍微拉近一点以突出显示
+      targetHeight = Math.min(currentHeight, 5000000); 
+    } else {
+      // 如果在当前层级是聚合的，计算需要放大的目标高度
+      // 增加 0.5 缓冲，确保换算回 zoom 时必然触发解聚
+      targetHeight = 150000000 / Math.pow(2, targetZoom + 0.5);
+    }
+    
+    targetHeight = Math.max(targetHeight, 10);
+
+    // 从坐标指纹中获取微调后的坐标（如果有重叠点）
+    // 为了精准定位，我们可以在当前 targetZoom 下再查一次目标点的准确坐标
+    const clustersAtTargetZ = sc.getClusters([-180, -85, 180, 85], targetZoom);
+    const leaf = clustersAtTargetZ.find(c => !c.properties.cluster && c.properties.pageid === selectedArticleId);
+    
+    const lon = leaf ? leaf.geometry.coordinates[0] : targetArticle.lon;
+    const lat = leaf ? leaf.geometry.coordinates[1] : targetArticle.lat;
+
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(lon, lat, targetHeight),
+      duration: 1.0, // 飞行时间
+    });
+    
+  }, [selectedArticleId, articles]);
+
   return (
     <Box sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', bgcolor: 'black', overflow: 'hidden' }}>
       <Box ref={containerRef} sx={{ width: '100%', height: '100%' }} />

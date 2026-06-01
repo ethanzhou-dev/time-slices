@@ -1,7 +1,6 @@
 import { useEffect, useRef, memo } from 'react';
 import { Box, Stack, IconButton, Fade, Paper, Typography } from '@mui/material';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { KeyboardArrowUpIcon, KeyboardArrowDownIcon } from './Icons';
 
 export interface TimelineNode {
   id: number;

@@ -1,12 +1,7 @@
 import { useState, memo } from 'react';
 import type { WikiArticle, SearchStatus } from '../services/wikipediaApi';
 import { Box, Paper, CircularProgress, Typography, Chip, Button, List, ListItemButton, ListItemText, ListItemIcon, Collapse, Fade } from '@mui/material';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckIcon from '@mui/icons-material/Check';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
-import TravelExploreIcon from '@mui/icons-material/TravelExplore';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { FormatListBulletedIcon, ExpandMoreIcon, CheckIcon, SearchOffIcon, TravelExploreIcon, AutoStoriesIcon } from './Icons';
 
 interface InfoPanelProps {
   article: WikiArticle | null;

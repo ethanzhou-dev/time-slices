@@ -4,7 +4,7 @@ import Supercluster from 'supercluster';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import { Fab, Paper, Box } from '@mui/material';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { LocationOnIcon } from './Icons';
 import type { WikiArticle } from '../services/wikipediaApi';
 
 export interface EarthMapRef {

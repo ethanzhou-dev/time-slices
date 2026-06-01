@@ -8,9 +8,7 @@ import { fetchArticlesInBounds } from './services/wikipediaApi';
 import type { WikiArticle, SearchStatus } from './services/wikipediaApi';
 
 import { Box, Stack, Fab, Typography } from '@mui/material';
-import PublicIcon from '@mui/icons-material/Public';
-import ExploreIcon from '@mui/icons-material/Explore';
-import SearchIcon from '@mui/icons-material/Search';
+import { PublicIcon, ExploreIcon, SearchIcon } from './components/Icons';
 
 export default function App() {
   const [articles, setArticles] = useState<WikiArticle[]>([]);

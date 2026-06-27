@@ -36,7 +36,6 @@ export default function App() {
     return index;
   }, [timelineNodes, selectedArticleId]);
 
-  // 性能优化：用 useCallback 稳定回调引用，避免子组件因引用变化而重渲染
   const handleArticleClick = useCallback((id: number) => {
     setSelectedArticleId(id);
   }, []);
@@ -68,18 +67,14 @@ export default function App() {
   const handleHeadingChange = useCallback((headingDeg: number) => {
     if (!compassIconRef.current) return;
     
-    // 计算最短旋转路径，避免跨越正北方向时出现 360 度“大风车”狂转
     let delta = headingDeg - (currentRotationRef.current % 360);
-    // 归一化 delta 到 [-180, 180] 范围内
     if (delta > 180) delta -= 360;
     else if (delta < -180) delta += 360;
     
     currentRotationRef.current += delta;
     
-    // explore 图标本身的指针是倾斜的（指向右上方45度），需要加上 -45 度的补偿角让其默认垂直向上
     const ICON_OFFSET = -45; 
     
-    // 绕过 React 状态机制，每帧直接修改 DOM transform 获得极高流畅度
     compassIconRef.current.style.transform = `rotate(${-currentRotationRef.current + ICON_OFFSET}deg)`;
   }, []);
 
@@ -88,7 +83,6 @@ export default function App() {
   }, []);
 
   const handleTimelineChange = useCallback((index: number) => {
-    // 通过函数式访问 timelineNodes，但 timelineNodes 是 useMemo 的，引用稳定
     if (timelineNodes[index]) {
       setSelectedArticleId(timelineNodes[index].articleId);
     }
@@ -109,7 +103,6 @@ export default function App() {
         onHeadingChange={handleHeadingChange}
       />
 
-      {/* Header Overlay */}
       <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)' }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: 'center', pointerEvents: 'auto', flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: '50%', bgcolor: 'primary.main', boxShadow: '0 0 15px rgba(208,188,255,0.5)' }}>
@@ -125,7 +118,6 @@ export default function App() {
           </Box>
         </Stack>
 
-        {/* Compass Button - 指南针 */}
         <Box sx={{ pointerEvents: 'auto' }}>
           <Fab
             size="small"
@@ -141,7 +133,6 @@ export default function App() {
         </Box>
       </Box>
 
-      {/* Left Info Panel */}
       <InfoPanel 
         article={selectedArticle}
         articles={articles}
@@ -149,7 +140,6 @@ export default function App() {
         searchStatus={searchStatus}
       />
 
-      {/* Right Timeline Controls */}
       {timelineNodes.length > 0 && (
         <TimelineControls 
           nodes={timelineNodes}
@@ -158,7 +148,6 @@ export default function App() {
         />
       )}
 
-      {/* Floating Scan Button */}
       <Box sx={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
         <Fab 
           variant="extended"

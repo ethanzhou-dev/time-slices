@@ -6,18 +6,17 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 }
 
-/* Hide scrollbar for a cleaner cinematic look but keep functionality */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1D1B20; /* MUI Dark surfaceContainerLow */
+  background: #1D1B20;
 }
 ::-webkit-scrollbar-thumb {
-  background: #49454F; /* MUI Dark surfaceVariant */
+  background: #49454F;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #938F99; /* MUI Dark outline */
+  background: #938F99;
 }

@@ -18,26 +18,26 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#141218',
-      paper: '#211F26', // surface-container
+      paper: '#211F26',
     },
     text: {
-      primary: '#E6E0E9', // on-surface
-      secondary: '#CAC4D0', // on-surface-variant
+      primary: '#E6E0E9',
+      secondary: '#CAC4D0',
     },
-    divider: '#49454F', // outline-variant
+    divider: '#49454F',
   },
   typography: {
     fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
   },
   shape: {
-    borderRadius: 16, // md-sys-shape-corner-large
+    borderRadius: 16,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
           textTransform: 'none',
-          borderRadius: 20, // md3 standard pill shape
+          borderRadius: 20,
         },
       },
     },
